@@ -1,0 +1,143 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Партньор — {{ partner.code }}</h1>
+
+<div class="stat-grid" style="grid-template-columns:repeat(2,1fr); max-width:480px;">
+  <div class="stat" style="{{ 'box-shadow:inset 0 0 0 1px rgba(230,180,60,0.4);' if owed_count > 0 }}">
+    <b>{% if owed_totals %}{% for cur, amt in owed_totals.items() %}{{ '%.2f'|format(amt) }} {{ cur }}{% if not loop.last %} + {% endif %}{% endfor %}{% else %}0{% endif %}</b>
+    <span>Дължиш му ({{ owed_count }} клиент{{ 'и' if owed_count != 1 }})</span>
+  </div>
+  <div class="stat">
+    <b>{% if paid_totals %}{% for cur, amt in paid_totals.items() %}{{ '%.2f'|format(amt) }} {{ cur }}{% if not loop.last %} + {% endif %}{% endfor %}{% else %}0{% endif %}</b>
+    <span>Вече изплатено</span>
+  </div>
+</div>
+<p style="color:var(--gray); font-size:11px; margin:-16px 0 24px;">* Ориентировъчно, изчислено от текста в полето "Сума" на всеки клиент.</p>
+
+<div class="card" style="max-width:600px;">
+  <form method="POST" action="{{ url_for('admin_partner_edit', partner_id=partner.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div>
+        <label>Име</label>
+        <input type="text" name="full_name" value="{{ partner.full_name }}">
+      </div>
+      <div>
+        <label>Телефон</label>
+        <input type="text" name="phone" value="{{ partner.phone or '' }}">
+      </div>
+    </div>
+    <div style="font-size:13px; color:var(--gray); margin:-10px 0 16px;">
+      Telegram: {% if partner.username %}@{{ partner.username }}{% else %}—{% endif %} (не се редактира тук)
+    </div>
+    <label>Тип</label>
+    <select name="is_company">
+      <option value="0" {{ 'selected' if not partner.is_company }}>Частно лице</option>
+      <option value="1" {{ 'selected' if partner.is_company }}>Фирма</option>
+    </select>
+    <label>Дейност</label>
+    <textarea name="activity" rows="3">{{ partner.activity or '' }}</textarea>
+    <button type="submit" class="btn btn-sm">Запази данните</button>
+  </form>
+
+  <div style="display:flex; gap:10px; margin:20px 0;">
+    <form method="POST" action="{{ url_for('admin_partner_status', partner_id=partner.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="status" value="approved">
+      <button type="submit" class="btn btn-primary" {{ 'disabled' if partner.status == 'approved' }}>✅ Одобри</button>
+    </form>
+    <form method="POST" action="{{ url_for('admin_partner_status', partner_id=partner.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="status" value="declined">
+      <button type="submit" class="btn btn-danger" {{ 'disabled' if partner.status == 'declined' }}>❌ Откажи</button>
+    </form>
+  </div>
+
+  <form method="POST" action="{{ url_for('admin_partner_notes', partner_id=partner.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Бележки (само за теб)</label>
+    <textarea name="notes" rows="3">{{ partner.notes or '' }}</textarea>
+    <button type="submit" class="btn btn-sm">Запази бележка</button>
+  </form>
+</div>
+
+{% if payout_requests %}
+<h2 style="font-size:16px; margin:30px 0 16px;">Заявки за изплащане</h2>
+<div class="card">
+  <div class="table-scroll">
+  <table>
+    <tr><th>Дата</th><th>Метод</th><th>Детайли</th><th>Статус</th><th></th></tr>
+    {% for pr in payout_requests %}
+    <tr>
+      <td>{{ pr.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+      <td>
+        {% if pr.method == 'revolut' %}💳 Revolut
+        {% elif pr.method == 'cash' %}💵 Кеш (София)
+        {% elif pr.method == 'courier' %}📦 Еконт/Спиди
+        {% elif pr.method == 'easypay' %}📱 EasyPay
+        {% else %}{{ pr.method }}{% endif %}
+      </td>
+      <td style="max-width:260px; white-space:normal;">{{ pr.details or '—' }}</td>
+      <td>{% if pr.status == 'completed' %}<span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">Обработена</span>{% else %}<span class="badge" style="background:rgba(230,180,60,0.15); color:#e6c060;">Чака</span>{% endif %}</td>
+      <td>
+        {% if pr.status != 'completed' %}
+        <form method="POST" action="{{ url_for('admin_payout_request_complete', partner_id=partner.id, request_id=pr.id) }}" style="min-width:220px;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% set pending_referrals = referrals|selectattr('status', 'equalto', 'sold')|selectattr('payout_status', 'equalto', 'pending')|list %}
+          {% if pending_referrals %}
+          <div style="font-size:11px; color:var(--gray); margin-bottom:6px;">Отбележи кои клиенти покрива това плащане:</div>
+          {% for ref in pending_referrals %}
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px; margin-bottom:4px;">
+            <input type="checkbox" name="referral_ids" value="{{ ref.id }}" style="width:auto;">
+            {{ ref.client_name }} ({{ ref.payout_amount or '—' }})
+          </label>
+          {% endfor %}
+          {% endif %}
+          <button type="submit" class="btn btn-sm">Маркирай обработена</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+</div>
+{% endif %}
+
+<h2 style="font-size:16px; margin:30px 0 16px;">Клиенти, изпратени от този партньор</h2>
+<div class="card">
+  {% if referrals %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Дата</th><th>Клиент</th><th>Телефон</th><th>Желае</th><th>Статус</th><th>Сума</th><th>Плащане</th><th>Начин</th><th>Платено на</th><th></th></tr>
+    {% for r in referrals %}
+    <tr>
+      <td>{{ r.created_at.strftime('%d.%m.%Y') }}</td>
+      <td colspan="9" style="padding:0;">
+        <form method="POST" action="{{ url_for('admin_partner_referral_update', partner_id=partner.id, referral_id=r.id) }}"
+              style="display:grid; grid-template-columns:repeat(3,1fr) repeat(3,1fr) 1fr; gap:8px; align-items:center; padding:12px 10px;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="client_name" value="{{ r.client_name }}" style="margin:0; padding:6px 8px; font-size:12px;" placeholder="Име на клиента">
+          <input type="text" name="client_phone" value="{{ r.client_phone }}" style="margin:0; padding:6px 8px; font-size:12px;" placeholder="Телефон">
+          <input type="text" name="client_wants" value="{{ r.client_wants }}" style="margin:0; padding:6px 8px; font-size:12px;" placeholder="Какво иска">
+          <select name="status" style="margin:0; padding:6px 8px; font-size:12px;">
+            <option value="new" {{ 'selected' if r.status == 'new' }}>Очаква продажба</option>
+            <option value="sold" {{ 'selected' if r.status == 'sold' }}>Успешно продадено</option>
+            <option value="declined" {{ 'selected' if r.status == 'declined' }}>Отказано</option>
+          </select>
+          <input type="text" name="payout_amount" value="{{ r.payout_amount or '' }}" placeholder="напр. 30 лв" style="margin:0; padding:6px 8px; font-size:12px;">
+          <select name="payout_status" style="margin:0; padding:6px 8px; font-size:12px;">
+            <option value="pending" {{ 'selected' if r.payout_status == 'pending' }}>Очаква плащане</option>
+            <option value="paid" {{ 'selected' if r.payout_status == 'paid' }}>Изплатено</option>
+          </select>
+          <input type="text" name="payout_method" value="{{ r.payout_method or '' }}" placeholder="напр. Банков превод" style="margin:0; padding:6px 8px; font-size:12px;">
+          <span style="font-size:11px; color:var(--gray);">{{ r.payout_date.strftime('%d.%m.%Y %H:%M') if r.payout_date else 'Няма плащане' }}</span>
+          <button type="submit" class="btn btn-sm">Запази</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">Все още не е изпращал клиенти.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+  <h1 style="margin:0;">Продукти</h1>
+  <a href="{{ url_for('admin_product_new') }}" class="btn btn-primary">+ Нов продукт</a>
+</div>
+<div class="card">
+  {% if products %}
+  <div class="table-scroll">
+  <table>
+    <tr><th></th><th>Име</th><th>Код</th><th>Цена</th><th>Снимки</th><th>Наличност</th><th>Статус</th><th>Действия</th></tr>
+    {% for p in products %}
+    {% set cover = p.images[0].image_path if p.images else p.image_path %}
+    <tr>
+      <td>{% if cover %}<img class="thumb" src="{{ url_for('uploaded_file', filename=cover) }}">{% endif %}</td>
+      <td>{% if p.is_bestseller %}🔥 {% endif %}{{ p.name }}</td>
+      <td>{{ p.sku or '—' }}</td>
+      <td>{{ p.price }}</td>
+      <td>{{ p.images|length }}</td>
+      <td>
+        {% if p.stock_status == 'out_of_stock' %}<span class="badge" style="background:rgba(226,34,44,0.15); color:#ff9aa0;">Изчерпано</span>
+        {% elif p.stock_status == 'on_order' %}<span class="badge" style="background:rgba(230,180,60,0.15); color:#e6c060;">Очаква се</span>
+        {% else %}<span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">Налично</span>{% endif %}
+      </td>
+      <td>{% if p.published %}<span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">Публикуван</span>{% else %}<span class="badge" style="background:rgba(154,154,160,0.15); color:var(--gray);">Скрит</span>{% endif %}</td>
+      <td><div class="row-actions">
+        <a class="btn btn-sm" href="{{ url_for('admin_product_edit', product_id=p.id) }}">Редакция</a>
+        <form method="POST" action="{{ url_for('admin_product_toggle', product_id=p.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" type="submit">{{ 'Скрий' if p.published else 'Публикувай' }}</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin_product_delete', product_id=p.id) }}" onsubmit="return confirm('Изтриване на продукта?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Изтрий</button>
+        </form>
+      </div></td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">Все още няма продукти.</div>
+  {% endif %}
+</div>
+{% endblock %}

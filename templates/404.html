@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Страницата не е намерена — AutoMediaBG</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ asset_version }}">
+<style>
+  .error-page{min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px;}
+  .error-page .code{font-family:'Archivo Black'; font-size:clamp(60px,15vw,120px); color:var(--red); line-height:1;}
+  .error-page h1{font-size:clamp(20px,4vw,28px); margin:16px 0 12px;}
+  .error-page p{color:var(--gray); max-width:400px; margin-bottom:28px;}
+</style>
+</head>
+<body>
+<div class="error-page">
+  <div class="code">404</div>
+  <h1>Тази страница не съществува</h1>
+  <p>Може би линкът е грешен или страницата е преместена. Върни се към началото и продължи оттам.</p>
+  <a href="/" class="btn btn-primary">Обратно към сайта</a>
+</div>
+</body>
+</html>

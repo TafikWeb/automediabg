@@ -1,0 +1,14 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>{{ 'Редакция на вариант' if option else 'Нов вариант' }}</h1>
+<div class="card" style="max-width:480px;">
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Текст (както ще го видят клиентите в падащото меню)</label>
+    <input type="text" name="label" value="{{ option.label if option else '' }}" placeholder="напр. Инсталация на алармена система" required>
+
+    <button type="submit" class="btn btn-primary">Запази</button>
+    <a href="{{ url_for('admin_interests') }}" class="btn">Отказ</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Лого</h1>
+<div class="card" style="max-width:480px;">
+  {% if logo_exists %}
+    <div style="background:#0a0a0b; border:1px solid var(--line); border-radius:8px; padding:20px; margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+      <img src="{{ url_for('uploaded_file', filename='logo/logo.png') }}" style="height:{{ logo_height or 40 }}px; width:auto;">
+      {% if logo_text %}<span style="font-family:'Archivo Black'; font-size:18px; color:#fff;">{{ logo_text }}</span>{% endif %}
+    </div>
+    <p style="color:var(--gray); font-size:11px; margin:-14px 0 20px;">Точно така изглежда логото в менюто на сайта в момента.</p>
+    <form method="POST" action="{{ url_for('admin_logo_delete') }}" onsubmit="return confirm('Премахване на логото? Сайтът ще покаже текстовото лого AutoMediaBG.');" style="margin-bottom:24px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-danger">Премахни логото</button>
+    </form>
+  {% else %}
+    <p style="color:var(--gray); font-size:13px; margin-bottom:20px;">Все още няма качено лого — показва се текстовото лого "AutoMediaBG".</p>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>{{ 'Качи ново лого (по избор — заменя текущото)' if logo_exists else 'Качи лого (PNG с прозрачен фон е най-добре)' }}</label>
+    <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" {{ 'required' if not logo_exists }}>
+
+    <label>Височина на логото (в пиксели)</label>
+    <input type="number" name="logo_height" value="{{ logo_height or 40 }}" min="16" max="120">
+
+    <label>Текст до логото (по избор — напр. слоган или допълнително име)</label>
+    <input type="text" name="logo_text" value="{{ logo_text or '' }}" placeholder="напр. Официален монтажен партньор">
+
+    <button type="submit" class="btn btn-primary">Запази</button>
+  </form>
+</div>
+{% endblock %}

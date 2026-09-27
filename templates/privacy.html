@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Политика за поверителност — AutoMediaBG</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ asset_version }}">
+<style>
+  .legal{max-width:760px; margin:0 auto; padding:100px 24px 80px;}
+  .legal h1{font-size:32px; margin-bottom:8px;}
+  .legal .updated{color:var(--gray); font-size:13px; margin-bottom:40px;}
+  .legal h2{font-family:'Manrope'; text-transform:none; font-size:18px; font-weight:800; margin:36px 0 12px;}
+  .legal p, .legal li{color:var(--gray); font-size:14.5px; line-height:1.75; margin-bottom:12px;}
+  .legal ul{padding-left:20px; margin-bottom:16px;}
+  .legal a{color:var(--red);}
+  .legal .back{display:inline-block; margin-bottom:30px; color:var(--gray); font-size:13px;}
+</style>
+</head>
+<body>
+<div class="legal">
+  <a href="/" class="back">← Обратно към сайта</a>
+  <h1>Политика за поверителност</h1>
+  <p class="updated">Последна актуализация: {{ today }}</p>
+
+  <p>AutoMediaBG ("ние") зачита поверителността на посетителите и клиентите на този сайт. Тук обясняваме какви данни събираме, защо, и какви права имате.</p>
+
+  <h2>Какви данни събираме</h2>
+  <ul>
+    <li><b>Форма за заявка:</b> име, телефонен номер, марка/модел на автомобил, съобщение — предоставени доброволно от вас, за да можем да ви изпратим оферта.</li>
+    <li><b>Telegram бот (ако го използвате):</b> Telegram потребителско име, идентификатор, и доброволно споделени снимки на монтирана техника — за реферална програма и обслужване на клиенти.</li>
+    <li><b>Бисквитки за анализ (Google Analytics):</b> само след изрично съгласие през банера в сайта — анонимизирана статистика за посещения, не съдържа лични данни, свързани с ваша самоличност.</li>
+  </ul>
+
+  <h2>Защо събираме тези данни</h2>
+  <ul>
+    <li>За да отговорим на вашата заявка и да ви предложим индивидуална оферта</li>
+    <li>За да проведем рекламираната реферална програма за отстъпки</li>
+    <li>За да подобрим сайта въз основа на анонимна статистика за трафик (само с ваше съгласие)</li>
+  </ul>
+
+  <h2>Съхранение</h2>
+  <p>Данните от заявки се пазят в защитена база данни и не се споделят с трети страни, освен доставчика на хостинг (Railway) и Telegram (за известия). Пазим ги толкова дълго, колкото е нужно за обработка на заявката и опериране на бизнеса, освен ако не поискате изтриване.</p>
+
+  <h2>Вашите права</h2>
+  <p>Съгласно GDPR имате право да поискате достъп до, коригиране или изтриване на данните, които пазим за вас. За да упражните тези права, свържете се с нас:</p>
+  <ul>
+    <li>Телефон: <a href="tel:+359897485885">0897 485 885</a></li>
+    <li>Instagram: <a href="https://www.instagram.com/automediabg/" target="_blank">@automediabg</a></li>
+  </ul>
+
+  <h2>Бисквитки</h2>
+  <p>Сайтът използва бисквитки единствено за:</p>
+  <ul>
+    <li><b>Необходими:</b> запазване на сесията при вход в администраторския панел (само за собственика на сайта).</li>
+    <li><b>По избор — аналитични (Google Analytics):</b> заредят се само след като натиснете "Приемам" на банера за бисквитки. Можете да откажете, без това да ограничи достъпа ви до сайта.</li>
+  </ul>
+
+  <h2>Промени</h2>
+  <p>Тази политика може да се обновява при нужда. Датата на последна актуализация е показана в началото на страницата.</p>
+</div>
+</body>
+</html>

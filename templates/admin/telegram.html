@@ -1,0 +1,55 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Telegram общност</h1>
+<p style="color:var(--gray); font-size:13px; margin-bottom:24px; margin-top:-14px;">
+  Данните тук идват от Telegram бота (bot_community.py). Instagram и Viber отметките са по потвърждение
+  на клиента в бота — ако имаш съмнение, можеш ръчно да ги промениш от тук.
+</p>
+
+<div class="stat-grid">
+  <div class="stat"><b>{{ stats.total }}</b><span>Общо в бота</span></div>
+  <div class="stat"><b>{{ stats.eligible_5 }}</b><span>Изкарали 5% отстъпка</span></div>
+  <div class="stat"><b>{{ stats.eligible_10 }}</b><span>Изкарали 10% отстъпка</span></div>
+</div>
+
+<div class="card">
+  {% if members %}
+  <div class="table-scroll"><table>
+    <tr>
+      <th>Потребител</th><th>Instagram</th><th>Viber</th><th>TG група</th><th>Снимка</th><th>Покани</th><th>Отстъпка</th><th>Влязъл</th><th></th>
+    </tr>
+    {% for m in members %}
+    <tr>
+      <td>{{ m.first_name }}{% if m.username %} (@{{ m.username }}){% endif %}</td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_telegram_toggle', member_id=m.id, field='followed_instagram') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" type="submit">{{ '✅' if m.followed_instagram else '⬜' }}</button>
+        </form>
+      </td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_telegram_toggle', member_id=m.id, field='joined_viber') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" type="submit">{{ '✅' if m.joined_viber else '⬜' }}</button>
+        </form>
+      </td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_telegram_toggle', member_id=m.id, field='joined_telegram_group') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" type="submit">{{ '✅' if m.joined_telegram_group else '⬜' }}</button>
+        </form>
+      </td>
+      <td>{{ '📷 да' if m.sent_install_photo else '—' }}</td>
+      <td>{{ m.referral_count }}/3</td>
+      <td><b>{{ m.discount_percent }}%</b></td>
+      <td>{{ m.created_at.strftime('%d.%m.%Y') }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_telegram_delete', member_id=m.id) }}" onsubmit="return confirm('Изтриване на този запис? Отстъпката му ще се нулира.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Изтрий</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+  <div class="empty">Все още никой не е писал на бота. Провери README за настройка на bot_community.py.</div>
+  {% endif %}
+</div>
+{% endblock %}

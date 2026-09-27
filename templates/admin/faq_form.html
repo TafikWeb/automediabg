@@ -1,0 +1,17 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>{{ 'Редакция на въпрос' if faq else 'Нов въпрос' }}</h1>
+<div class="card" style="max-width:520px;">
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Въпрос</label>
+    <input type="text" name="question" value="{{ faq.question if faq else '' }}" required>
+
+    <label>Отговор</label>
+    <textarea name="answer" rows="5" required>{{ faq.answer if faq else '' }}</textarea>
+
+    <button type="submit" class="btn btn-primary">Запази</button>
+    <a href="{{ url_for('admin_faq') }}" class="btn">Отказ</a>
+  </form>
+</div>
+{% endblock %}

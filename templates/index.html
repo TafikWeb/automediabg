@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ T.meta_title }}</title>
+<meta name="description" content="{{ T.meta_description }}">
+<meta name="keywords" content="мултимедия за кола, монтаж мултимедия, камера за задно виждане, android auto, carplay, canbus, автомобилна електроника, София">
+<link rel="canonical" href="{{ request.url_root }}">
+{% if lang != 'bg' %}<link rel="alternate" hreflang="bg" href="{{ request.url_root }}">{% endif %}
+{% if lang != 'en' %}<link rel="alternate" hreflang="en" href="{{ request.url_root }}en/">{% endif %}
+{% if lang != 'ru' %}<link rel="alternate" hreflang="ru" href="{{ request.url_root }}ru/">{% endif %}
+
+<!-- Open Graph / споделяне във Facebook, Viber, Instagram линкове -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ T.meta_title }}">
+<meta property="og:description" content="{{ T.meta_description }}">
+<meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='favicon-512.png') }}">
+<meta property="og:locale" content="{{ T.og_locale }}">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='favicon-192.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ asset_version }}">
+
+{% if ga_id %}
+<script>
+  function loadGoogleAnalytics(){
+    if(window.__gaLoaded) return;
+    window.__gaLoaded = true;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id={{ ga_id }}";
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', '{{ ga_id }}');
+  }
+  if(localStorage.getItem('cookie_consent') === 'accepted'){
+    loadGoogleAnalytics();
+  }
+</script>
+{% endif %}
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <a href="#" class="logo">
+      {% if logo_exists %}
+        <img src="{{ url_for('uploaded_file', filename='logo/logo.png') }}" alt="AutoMediaBG" style="height:{{ logo_height or 40 }}px; width:auto;">
+        {% if logo_text %}<span class="logo-side-text">{{ logo_text }}</span>{% endif %}
+      {% else %}
+        AUTO<span>MEDIA</span>BG
+      {% endif %}
+    </a>
+    <div class="nav-links">
+      <a href="#uslugi">{{ T.nav_services }}</a>
+      <a href="#montirani">{{ T.nav_installed }}</a>
+      <a href="#produkti">{{ T.nav_products }}</a>
+      <a href="#zayavka">{{ T.nav_request }}</a>
+    </div>
+    <div class="nav-cta">
+      <div class="lang-switch">
+        <a href="/" class="{{ 'active' if lang=='bg' }}">BG</a>
+        {% if lang_en_enabled %}<a href="/en/" class="{{ 'active' if lang=='en' }}">EN</a>{% endif %}
+        {% if lang_ru_enabled %}<a href="/ru/" class="{{ 'active' if lang=='ru' }}">RU</a>{% endif %}
+      </div>
+      <a class="nav-phone" href="tel:+359897485885">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        0897 485 885
+      </a>
+      <a href="#zayavka" class="btn btn-primary nav-request-btn" style="padding:12px 22px;">{{ T.nav_request }}</a>
+      <button class="burger" onclick="document.querySelector('.mobile-menu').classList.add('open')">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<div class="mobile-menu">
+  <div class="close-row">
+    <div class="logo">AUTO<span>MEDIA</span>BG</div>
+    <button class="burger" onclick="document.querySelector('.mobile-menu').classList.remove('open')" style="transform:rotate(45deg);"><span style="width:24px;"></span></button>
+  </div>
+  <a href="#uslugi" onclick="document.querySelector('.mobile-menu').classList.remove('open')">{{ T.nav_services }}</a>
+  <a href="#montirani" onclick="document.querySelector('.mobile-menu').classList.remove('open')">{{ T.nav_installed }}</a>
+  <a href="#produkti" onclick="document.querySelector('.mobile-menu').classList.remove('open')">{{ T.nav_products }}</a>
+  <a href="#zayavka" onclick="document.querySelector('.mobile-menu').classList.remove('open')">{{ T.nav_request }}</a>
+  <div class="lang-switch lang-switch-mobile">
+    <a href="/" class="{{ 'active' if lang=='bg' }}">BG</a>
+    {% if lang_en_enabled %}<a href="/en/" class="{{ 'active' if lang=='en' }}">EN</a>{% endif %}
+    {% if lang_ru_enabled %}<a href="/ru/" class="{{ 'active' if lang=='ru' }}">RU</a>{% endif %}
+  </div>
+</div>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">{{ T.hero_eyebrow }}</div>
+      <h1>{{ T.hero_title_l1 }}<br>{{ T.hero_title_l2 }}<br><span class="red">{{ T.hero_title_l3 }}</span></h1>
+      <p class="lead">{{ T.hero_lead }}</p>
+      <div class="hero-actions">
+        <a href="#zayavka" class="btn btn-primary">{{ T.hero_cta_request }}</a>
+        <a href="#montirani" class="btn btn-ghost">{{ T.hero_cta_view }}</a>
+      </div>
+      <div class="hero-stats">
+        <div><b>{{ T.hero_stat1_val }}</b><span>{{ T.hero_stat1_label }}</span></div>
+        <div><b>{{ T.hero_stat2_val }}</b><span>{{ T.hero_stat2_label }}</span></div>
+        <div><b>{{ T.hero_stat3_val }}</b><span>{{ T.hero_stat3_label }}</span></div>
+      </div>
+    </div>
+
+    <div class="headunit">
+      <div class="headunit-bar"><b>AutoMediaBG</b><span>10:30 · CarPlay</span></div>
+      <div class="headunit-apps">
+        <div class="app" onclick="goToService('multimedia', this)"><div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><span>{{ T.app_multimedia }}</span></div>
+        <div class="app" onclick="goToService('camera', this)"><div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div><span>{{ T.app_camera }}</span></div>
+        <div class="app" onclick="goToService('settings', this)"><div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div><span>{{ T.app_settings }}</span></div>
+        <div class="app" onclick="goToService('offer', this)"><div class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></div><span>{{ T.app_info }}</span></div>
+      </div>
+      <div class="headunit-foot">
+        <span>{{ T.headunit_ready }}</span>
+        <div class="dot-row"><div class="dot on"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap divider"></div>
+
+<section id="uslugi">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">{{ T.services_eyebrow }}</div>
+      <h2>{{ T.services_title }}</h2>
+      <p>{{ T.services_subtitle }}</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="services-wrap">
+      <div class="services-grid" id="servicesGrid">
+        {% for s in services %}
+        <div class="service" {% if s.hero_key %}data-service="{{ s.hero_key }}"{% endif %}>
+          <span class="num">{{ '%02d'|format(loop.index) }}</span>
+          <div class="service-icon service-icon-emoji">{{ s.icon }}</div>
+          <h3>{{ s.title }}</h3>
+          <p>{{ s.description }}</p>
+          <button type="button" class="link-arrow service-request-btn" data-service-id="{{ s.id }}">{{ T.service_request_cta }} →</button>
+        </div>
+        {% endfor %}
+      </div>
+      {% if services|length > 1 %}
+      <div class="services-nav">
+        <button type="button" class="services-nav-btn" onclick="scrollServices(-1)" aria-label="Предишни">‹</button>
+        <button type="button" class="services-nav-btn" onclick="scrollServices(1)" aria-label="Следващи">›</button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section id="montirani" style="background:var(--surface); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">{{ T.gallery_eyebrow }}</div>
+      <h2>{{ T.gallery_title }}</h2>
+      <p>{{ T.gallery_subtitle }}</p>
+    </div>
+    {% if gallery_posts %}
+    <div class="gallery-tabs" id="galleryTabs">
+      <div class="gtab active" data-cat="all">{{ T.gallery_tab_all }}</div>
+      {% for brand in gallery_brands %}
+      <div class="gtab" data-cat="{{ brand.id }}">{{ brand.name }}</div>
+      {% endfor %}
+    </div>
+    <div class="gallery-grid">
+      {% for post in gallery_posts %}
+      <div class="gallery-item" data-cat="{{ post.brand_id or '' }}" onclick="openGalleryPost({{ post.id }})">
+        {% if post.images %}
+          <img id="galleryThumb-{{ post.id }}" src="{{ url_for('uploaded_file', filename=post.images[0].image_path) }}" alt="{{ post.tag }}" loading="lazy">
+        {% endif %}
+        {% if post.images|length > 1 %}
+        <button class="product-thumb-nav prev" onclick="event.stopPropagation(); cycleGalleryCardImage({{ post.id }}, -1)" aria-label="{{ T.prev_photo }}">&#8249;</button>
+        <button class="product-thumb-nav next" onclick="event.stopPropagation(); cycleGalleryCardImage({{ post.id }}, 1)" aria-label="{{ T.next_photo }}">&#8250;</button>
+        <div class="product-photo-count">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          {{ post.images|length }}
+        </div>
+        {% endif %}
+        {% if post.tag %}<div class="tag">{{ post.tag }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">{{ T.gallery_empty }}</div>
+    {% endif %}
+  </div>
+</section>
+
+<section id="produkti">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">{{ T.products_eyebrow }}</div>
+      <h2>{{ T.products_title }}</h2>
+      <p>{{ T.products_subtitle }}</p>
+    </div>
+    {% if products %}
+    <div class="products-toolbar">
+      <div class="products-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="productSearch" placeholder="{{ T.products_search_placeholder }}" oninput="filterProducts()">
+      </div>
+      {% if product_brands %}
+      <div class="gallery-tabs" id="productBrandTabs">
+        <div class="gtab active" data-brand="all" onclick="filterProductsByBrand('all', this)">{{ T.gallery_tab_all }}</div>
+        {% for brand in product_brands %}
+        <div class="gtab" data-brand="{{ brand.id }}" onclick="filterProductsByBrand('{{ brand.id }}', this)">{{ brand.name }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="products-grid" id="productsGrid">
+      {% for p in products %}
+      {% set cover = p.images[0].image_path if p.images else p.image_path %}
+      <div class="product-card" onclick="openProduct({{ p.id }})"
+           data-brands="{{ p.brands|map(attribute='id')|join(',') }}"
+           data-search="{{ (p.name ~ ' ' ~ p.sku ~ ' ' ~ p.compatible_cars)|lower }}">
+        <div class="product-thumb">
+          {% if p.is_bestseller %}<span class="bestseller-badge">🔥 {{ T.bestseller_label }}</span>{% endif %}
+          {% if p.badge %}<span class="product-badge">{{ p.badge }}</span>{% endif %}
+          <span class="stock-badge stock-{{ p.stock_status }}">
+            {% if p.stock_status == 'out_of_stock' %}{{ T.stock_out }}
+            {% elif p.stock_status == 'on_order' %}{{ T.stock_order }}
+            {% else %}{{ T.stock_in }}{% endif %}
+          </span>
+          {% if cover %}
+            <img id="cardThumb-{{ p.id }}" src="{{ url_for('uploaded_file', filename=cover) }}" alt="{{ p.name }}{% if p.compatible_cars %} — {{ T.compat_alt_prefix }} {{ p.compatible_cars | format_compat_cars }}{% endif %}" loading="lazy">
+          {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          {% endif %}
+          {% if p.images|length > 1 %}
+          <button class="product-thumb-nav prev" onclick="event.stopPropagation(); cycleCardImage({{ p.id }}, -1)" aria-label="{{ T.prev_photo }}">&#8249;</button>
+          <button class="product-thumb-nav next" onclick="event.stopPropagation(); cycleCardImage({{ p.id }}, 1)" aria-label="{{ T.next_photo }}">&#8250;</button>
+          <div class="product-photo-count">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            {{ p.images|length }}
+          </div>
+          {% endif %}
+        </div>
+        <div class="product-body">
+          <h3>{{ p.name }}</h3>
+          {% if p.sku %}<div class="product-sku">{{ p.sku }}</div>{% endif %}
+          <p>{{ p.description | format_bullets }}</p>
+          {% if p.compatible_cars %}
+          <details class="product-compat-details" onclick="event.stopPropagation()">
+            <summary>🚗 {{ T.compat_toggle }}</summary>
+            <p>{{ p.compatible_cars | format_compat_cars }}</p>
+          </details>
+          {% endif %}
+          <div class="product-foot">
+            <div class="price">{{ p.price }}</div>
+            <button type="button" class="link-arrow request-btn" data-product-id="{{ p.id }}">{{ T.product_request }}</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="products-no-results" id="productsNoResults" style="display:none;">{{ T.products_no_results }}</p>
+    {% else %}
+    <div class="empty-state">{{ T.products_empty }}</div>
+    {% endif %}
+
+    <div class="custom-order-banner">
+      <div class="custom-order-icon">🛠️</div>
+      <div class="custom-order-text">
+        <b>{{ T.custom_order_title }}</b>
+        <span>{{ T.custom_order_subtitle }}</span>
+      </div>
+      <button type="button" class="btn btn-ghost" onclick="requestCustomOrder()">{{ T.custom_order_cta }}</button>
+    </div>
+  </div>
+</section>
+
+{% if testimonials %}
+<section id="otzivi" style="background:var(--surface); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">{{ T.testimonials_eyebrow }}</div>
+      <h2>{{ T.testimonials_title }}</h2>
+    </div>
+    <div class="testimonials-grid">
+      {% for t in testimonials %}
+      <div class="testimonial-card">
+        {% if t.media_path %}
+        <div class="testimonial-media">
+          {% if t.media_type == 'video' %}
+          <video src="{{ url_for('uploaded_file', filename=t.media_path) }}" controls muted playsinline preload="metadata"></video>
+          {% else %}
+          <img src="{{ url_for('uploaded_file', filename=t.media_path) }}" alt="{{ t.author_name }}" loading="lazy">
+          {% endif %}
+        </div>
+        {% endif %}
+        <div class="testimonial-stars">{{ '★' * t.rating }}{{ '☆' * (5 - t.rating) }}</div>
+        <p class="testimonial-text">{{ t.text }}</p>
+        <div class="testimonial-author">
+          <b>{{ t.author_name }}</b>
+          {% if t.car_model %}<span>{{ t.car_model }}</span>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if social.google_review %}
+<section id="google-review" style="background:var(--surface); border-bottom:1px solid var(--line); padding:44px 0;">
+  <div class="wrap" style="text-align:center;">
+    <a href="{{ social.google_review }}" target="_blank" class="google-review-cta">
+      <span class="google-review-icon">⭐</span>
+      <span>{{ T.google_review_cta }}</span>
+    </a>
+  </div>
+</section>
+{% endif %}
+
+{% if faqs %}
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">{{ T.faq_eyebrow }}</div>
+      <h2>{{ T.faq_title }}</h2>
+    </div>
+    <div class="faq-list">
+      {% for f in faqs %}
+      <div class="faq-item">
+        <button type="button" class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+          <span>{{ f.question }}</span>
+          <span class="faq-toggle">+</span>
+        </button>
+        <div class="faq-answer"><p>{{ f.answer }}</p></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="cta-section" id="zayavka">
+  <div class="wrap cta-grid">
+    <div>
+      <div class="eyebrow">{{ T.form_eyebrow }}</div>
+      <h2>{{ T.form_title }}</h2>
+      <p>{{ T.form_subtitle }}</p>
+      <p class="form-hint-note">💡 {{ T.form_hint }}</p>
+      <div class="contact-list">
+        <a href="{{ social.phone or 'tel:+359897485885' }}">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+          0897 485 885
+        </a>
+        {% if social.instagram %}
+        <a href="{{ social.instagram }}" target="_blank">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></div>
+          @automediabg
+        </a>
+        {% endif %}
+        {% if social.viber %}
+        <a href="{{ social.viber }}" target="_blank">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 2 2 6 2 11c0 2.8 1.4 5.3 3.7 7L5 22l4.3-2.3c.9.2 1.8.3 2.7.3 5.5 0 10-4 10-9s-4.5-9-10-9z"/></svg></div>
+          {{ T.form_viber_label }}
+        </a>
+        {% endif %}
+        {% if social.telegram %}
+        <a href="{{ social.telegram }}" target="_blank">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
+          {{ T.form_telegram_label }}
+        </a>
+        {% endif %}
+        {% if social.tiktok %}
+        <a href="{{ social.tiktok }}" target="_blank">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg></div>
+          TikTok
+        </a>
+        {% endif %}
+        {% if social.whatsapp %}
+        <a href="{{ social.whatsapp }}" target="_blank">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+          WhatsApp
+        </a>
+        {% endif %}
+      </div>
+      <div class="info-box">
+        <div><b>{{ T.form_sofia_title }}</b> {{ T.form_sofia_text }}</div>
+        <div><b>{{ T.form_duration_title }}</b> {{ T.form_duration_text }}</div>
+      </div>
+    </div>
+
+    <form class="lead" id="leadForm">
+      <input type="hidden" name="lang" value="{{ lang }}">
+      <input type="hidden" name="form_ts" value="{{ form_ts }}">
+      <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+        <label>Оставете това поле празно</label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off">
+      </div>
+      <input type="hidden" name="product_id" id="productIdInput" value="">
+      <div class="selected-product-chip" id="selectedProductChip" style="display:none;">
+        <span id="selectedProductLabel"></span>
+        <button type="button" onclick="clearSelectedProduct()" aria-label="Премахни">✕</button>
+      </div>
+      <input type="hidden" name="service_id" id="serviceIdInput" value="">
+      <div class="selected-product-chip" id="selectedServiceChip" style="display:none;">
+        <span id="selectedServiceLabel"></span>
+        <button type="button" onclick="clearSelectedService()" aria-label="Премахни">✕</button>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>{{ T.form_name_label }}</label>
+          <input type="text" name="name" placeholder="{{ T.form_name_placeholder }}" required>
+        </div>
+        <div>
+          <label>{{ T.form_phone_label }}</label>
+          <div class="phone-field">
+            <select id="phoneCode" onchange="applyPhoneCode()">
+              <option value="+359" selected>🇧🇬 +359</option>
+              <option value="+30">🇬🇷 +30</option>
+              <option value="+40">🇷🇴 +40</option>
+              <option value="+389">🇲🇰 +389</option>
+              <option value="+381">🇷🇸 +381</option>
+              <option value="other">{{ T.form_other_code }}</option>
+            </select>
+            <input type="tel" name="phone" id="phoneInput" placeholder="{{ T.form_phone_placeholder }}" required>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>{{ T.form_car_label }}</label>
+          <input type="text" name="car" placeholder="{{ T.form_car_placeholder }}">
+        </div>
+        <div>
+          <label>{{ T.form_interest_label }}</label>
+          <select name="interest" id="interestSelect">
+            {% for opt in interest_options %}
+            <option value="{{ opt.key }}">{{ opt.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label>{{ T.form_message_label }}</label>
+        <textarea name="message" placeholder="{{ T.form_message_placeholder }}"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" style="align-self:flex-start;">{{ T.form_submit }}</button>
+      <div class="form-msg" id="msgOk">{{ T.form_success }}</div>
+      <div class="form-msg" id="msgErr">{{ T.form_error }}</div>
+    </form>
+    {% if social.telegram and discount_enabled %}
+    <a href="{{ social.telegram }}" target="_blank" class="discount-cta">
+      <span class="discount-cta-icon">🎁</span>
+      <span>
+        <b>{{ T.discount_cta_title }}</b>
+        <small>{{ T.discount_cta_subtitle }}</small>
+      </span>
+    </a>
+    {% endif %}
+    {% if social.telegram and partner_enabled %}
+    <a href="{{ social.telegram }}" target="_blank" class="discount-cta partner-cta">
+      <span class="discount-cta-icon">💼</span>
+      <span>
+        <b>{{ T.partner_cta_title }}</b>
+        <small>{{ T.partner_cta_subtitle }}</small>
+      </span>
+    </a>
+    {% endif %}
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">AUTO<span>MEDIA</span>BG</div>
+        <p>{{ T.footer_tagline }}</p>
+        <div class="social-row">
+          {% if social.instagram %}
+          <a class="social-btn" href="{{ social.instagram }}" target="_blank" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+          </a>
+          {% endif %}
+          {% if social.viber %}
+          <a class="social-btn" href="{{ social.viber }}" target="_blank" aria-label="Viber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 2 2 6 2 11c0 2.8 1.4 5.3 3.7 7L5 22l4.3-2.3c.9.2 1.8.3 2.7.3 5.5 0 10-4 10-9s-4.5-9-10-9z"/></svg>
+          </a>
+          {% endif %}
+          {% if social.telegram %}
+          <a class="social-btn" href="{{ social.telegram }}" target="_blank" aria-label="Telegram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </a>
+          {% endif %}
+          {% if social.tiktok %}
+          <a class="social-btn" href="{{ social.tiktok }}" target="_blank" aria-label="TikTok">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+          </a>
+          {% endif %}
+          {% if social.whatsapp %}
+          <a class="social-btn" href="{{ social.whatsapp }}" target="_blank" aria-label="WhatsApp">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </a>
+          {% endif %}
+          <a class="social-btn" href="{{ social.phone or 'tel:+359897485885' }}" aria-label="{{ T.form_phone_label }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>{{ T.footer_nav_title }}</h4>
+          <a href="#uslugi">{{ T.nav_services }}</a>
+          <a href="#montirani">{{ T.nav_installed }}</a>
+          <a href="#produkti">{{ T.nav_products }}</a>
+          <a href="#zayavka">{{ T.nav_request }}</a>
+        </div>
+        <div class="footer-col">
+          <h4>{{ T.footer_contact_title }}</h4>
+          <a href="{{ social.phone or 'tel:+359897485885' }}">0897 485 885</a>
+          {% if social.instagram %}<a href="{{ social.instagram }}" target="_blank">Instagram</a>{% endif %}
+          {% if social.viber %}<a href="{{ social.viber }}" target="_blank">{{ T.form_viber_label }}</a>{% endif %}
+          {% if social.telegram %}<a href="{{ social.telegram }}" target="_blank">{{ T.form_telegram_label }}</a>{% endif %}
+          {% if social.tiktok %}<a href="{{ social.tiktok }}" target="_blank">TikTok</a>{% endif %}
+          {% if social.whatsapp %}<a href="{{ social.whatsapp }}" target="_blank">WhatsApp</a>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>{{ T.footer_copyright }}</span>
+      <span><a href="/privacy" style="color:var(--gray);">{{ T.footer_privacy }}</a> · <a href="/admin/login" style="color:var(--gray);">{{ T.footer_admin }}</a></span>
+    </div>
+  </div>
+</footer>
+<!-- site version: {{ site_version }} -->
+
+
+<div class="cookie-banner" id="cookieBanner">
+  <p>{{ T.cookie_text | safe }}</p>
+  <div class="cookie-actions">
+    <button class="btn btn-ghost btn-sm-cookie" onclick="handleCookieChoice('declined')">{{ T.cookie_decline }}</button>
+    <button class="btn btn-primary btn-sm-cookie" onclick="handleCookieChoice('accepted')">{{ T.cookie_accept }}</button>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('#galleryTabs .gtab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('#galleryTabs .gtab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      const cat = tab.dataset.cat;
+      document.querySelectorAll('.gallery-item').forEach(item=>{
+        item.style.display = (cat === 'all' || item.dataset.cat === cat) ? '' : 'none';
+      });
+    });
+  });
+
+  function filterProductsByBrand(brand, tabEl){
+    document.querySelectorAll('#productBrandTabs .gtab').forEach(t=>t.classList.remove('active'));
+    tabEl.classList.add('active');
+    applyProductFilters();
+  }
+
+  function filterProducts(){
+    applyProductFilters();
+  }
+
+  function applyProductFilters(){
+    const activeTab = document.querySelector('#productBrandTabs .gtab.active');
+    const brand = activeTab ? activeTab.dataset.brand : 'all';
+    const query = (document.getElementById('productSearch')?.value || '').trim().toLowerCase();
+    let visibleCount = 0;
+    document.querySelectorAll('#productsGrid .product-card').forEach(card=>{
+      const brands = (card.dataset.brands || '').split(',').filter(Boolean);
+      const matchesBrand = brand === 'all' || brands.includes(brand);
+      const matchesSearch = !query || (card.dataset.search || '').includes(query);
+      const show = matchesBrand && matchesSearch;
+      card.style.display = show ? '' : 'none';
+      if(show) visibleCount++;
+    });
+    const noResults = document.getElementById('productsNoResults');
+    if(noResults) noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+  }
+
+  function applyPhoneCode(){
+    const sel = document.getElementById('phoneCode');
+    const input = document.getElementById('phoneInput');
+    if(sel.value === 'other'){
+      const code = prompt(I18N.phoneCodePrompt, '+');
+      sel.value = '+359';
+      if(!code) return;
+      const cleanCode = code.trim().startsWith('+') ? code.trim() : ('+' + code.trim());
+      setPhonePrefix(input, cleanCode);
+      return;
+    }
+    setPhonePrefix(input, sel.value);
+  }
+
+  function setPhonePrefix(input, code){
+    const digitsOnly = input.value.replace(/^\+\d+\s*/, '').replace(/^0+\s*/, '').replace(/\D/g, '');
+    input.value = digitsOnly ? (code + ' ' + digitsOnly) : (code + ' ');
+    input.focus();
+  }
+
+  const form = document.getElementById('leadForm');
+  const okMsg = document.getElementById('msgOk');
+  const errMsg = document.getElementById('msgErr');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    okMsg.classList.remove('ok');
+    errMsg.classList.remove('err');
+    const formData = new FormData(form);
+    try{
+      const res = await fetch('/api/lead', {method:'POST', body: formData});
+      const data = await res.json();
+      if(data.ok){
+        okMsg.classList.add('ok');
+        if(typeof gtag === 'function'){
+          gtag('event', 'generate_lead', {
+            currency: 'BGN',
+            interest: formData.get('interest') || '',
+          });
+        }
+        form.reset();
+        clearSelectedProduct();
+      } else {
+        errMsg.textContent = data.error || I18N.formError;
+        errMsg.classList.add('err');
+      }
+    } catch(err){
+      errMsg.textContent = I18N.formError;
+      errMsg.classList.add('err');
+    }
+  });
+</script>
+
+<div class="product-modal-overlay" id="productModalOverlay" onclick="if(event.target === this) closeProductModal()">
+  <div class="product-modal">
+    <button class="modal-close" onclick="closeProductModal()">&times;</button>
+    <div class="modal-media">
+      <button class="modal-nav prev" onclick="modalPrev()">&#8249;</button>
+      <img id="modalImage" src="" alt="">
+      <button class="modal-nav next" onclick="modalNext()">&#8250;</button>
+      <div class="modal-counter" id="modalCounter"></div>
+      <div class="modal-image-caption" id="modalImageCaption" style="display:none;"></div>
+    </div>
+    <div class="modal-thumbs" id="modalThumbs"></div>
+    <div class="modal-info">
+      <span class="modal-badge" id="modalBadge"></span>
+      <span class="stock-badge" id="modalStockBadge" style="margin-left:8px;"></span>
+      <h3 id="modalName"></h3>
+      <p id="modalDesc"></p>
+      <p id="modalCompat" style="display:none; color:var(--gray); font-size:13px; margin-top:-8px;"></p>
+      <div class="modal-footer">
+        <div class="price" id="modalPrice"></div>
+        <button class="btn btn-primary" onclick="modalRequestQuote()">{{ T.modal_request }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="product-modal-overlay" id="galleryModalOverlay" onclick="if(event.target === this) closeGalleryModal()">
+  <div class="product-modal">
+    <button class="modal-close" onclick="closeGalleryModal()">&times;</button>
+    <div class="modal-media">
+      <button class="modal-nav prev" onclick="galleryModalPrev()">&#8249;</button>
+      <img id="galleryModalImage" src="" alt="">
+      <button class="modal-nav next" onclick="galleryModalNext()">&#8250;</button>
+      <div class="modal-counter" id="galleryModalCounter"></div>
+    </div>
+    <div class="modal-thumbs" id="galleryModalThumbs"></div>
+    <div class="modal-info">
+      <span class="modal-badge" id="galleryModalBrand"></span>
+      <h3 id="galleryModalTag"></h3>
+      <div class="modal-footer" style="justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="galleryModalRequestQuote()">{{ T.modal_request }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const I18N = {
+    phoneCodePrompt: {{ T.phone_code_prompt | tojson }},
+    formError: {{ T.form_error | tojson }},
+    selectedProductPrefix: {{ T.selected_product_prefix | tojson }},
+    selectedServicePrefix: {{ T.selected_service_prefix | tojson }},
+    stockIn: {{ T.stock_in | tojson }},
+    stockOrder: {{ T.stock_order | tojson }},
+    stockOut: {{ T.stock_out | tojson }},
+  };
+
+  function selectProductForLead(id, name){
+    document.getElementById('productIdInput').value = id;
+    document.getElementById('selectedProductLabel').textContent = I18N.selectedProductPrefix + ' ' + name;
+    document.getElementById('selectedProductChip').style.display = 'flex';
+    document.getElementById('zayavka').scrollIntoView({behavior:'smooth'});
+    if(typeof gtag === 'function'){
+      gtag('event', 'select_item', {item_list_name: 'products', items: [{item_id: String(id), item_name: name}]});
+    }
+  }
+
+  function selectServiceForLead(id, title){
+    document.getElementById('serviceIdInput').value = id;
+    document.getElementById('selectedServiceLabel').textContent = I18N.selectedServicePrefix + ' ' + title;
+    document.getElementById('selectedServiceChip').style.display = 'flex';
+    document.getElementById('zayavka').scrollIntoView({behavior:'smooth'});
+    if(typeof gtag === 'function'){
+      gtag('event', 'select_item', {item_list_name: 'services', items: [{item_id: String(id), item_name: title}]});
+    }
+  }
+  function clearSelectedService(){
+    document.getElementById('serviceIdInput').value = '';
+    document.getElementById('selectedServiceChip').style.display = 'none';
+  }
+
+  function scrollServices(direction){
+    const grid = document.getElementById('servicesGrid');
+    if(!grid) return;
+    const card = grid.querySelector('.service');
+    const step = card ? card.getBoundingClientRect().width + 1 : 260;
+    grid.scrollBy({left: direction * step, behavior: 'smooth'});
+  }
+
+  // Делегиран listener вместо inline onclick — по-безопасно, защото имена на
+  // продукти с кавички (напр. 9" екран) чупят HTML атрибути с inline onclick.
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('.request-btn');
+    if(btn){
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.productId, 10);
+      const data = PRODUCTS_DATA[id];
+      if(data) selectProductForLead(id, data.name);
+      return;
+    }
+    const serviceBtn = e.target.closest('.service-request-btn');
+    if(serviceBtn){
+      e.stopPropagation();
+      const sid = parseInt(serviceBtn.dataset.serviceId, 10);
+      const sdata = SERVICES_DATA[sid];
+      if(sdata) selectServiceForLead(sid, sdata.title);
+    }
+  });
+  function clearSelectedProduct(){
+    document.getElementById('productIdInput').value = '';
+    document.getElementById('selectedProductChip').style.display = 'none';
+  }
+
+  function requestCustomOrder(){
+    const select = document.querySelector('select[name="interest"]');
+    if(select) select.value = 'custom_order';
+    document.getElementById('zayavka').scrollIntoView({behavior:'smooth'});
+  }
+
+  function addSwipeSupport(el, onSwipeLeft, onSwipeRight){
+    let startX = 0, startY = 0, tracking = false;
+    el.addEventListener('touchstart', (e)=>{
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+    }, {passive:true});
+    el.addEventListener('touchend', (e)=>{
+      if(!tracking) return;
+      tracking = false;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if(Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)){
+        if(dx < 0) onSwipeLeft(); else onSwipeRight();
+      }
+    }, {passive:true});
+  }
+
+  function goToService(key, heroEl){
+    const card = document.querySelector('.service[data-service="' + key + '"]');
+    if(card){
+      card.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
+      card.classList.add('flash');
+      setTimeout(()=> card.classList.remove('flash'), 2200);
+    }
+    if(heroEl){
+      const icon = heroEl.querySelector('.app-icon');
+      icon.classList.add('flash');
+      setTimeout(()=> icon.classList.remove('flash'), 700);
+    }
+  }
+
+  const PRODUCTS_DATA = {{ products_json | safe }};
+  const cardIndexes = {};
+
+  function cycleCardImage(id, dir){
+    const data = PRODUCTS_DATA[id];
+    if(!data || !data.images || data.images.length < 2) return;
+    const len = data.images.length;
+    const current = cardIndexes[id] || 0;
+    const next = (current + dir + len) % len;
+    cardIndexes[id] = next;
+    const img = document.getElementById('cardThumb-' + id);
+    if(img) img.src = data.images[next];
+  }
+
+  const GALLERY_DATA = {{ gallery_json | safe }};
+  const SERVICES_DATA = {{ services_json | safe }};
+  const galleryCardIndexes = {};
+
+  function cycleGalleryCardImage(id, dir){
+    const data = GALLERY_DATA[id];
+    if(!data || !data.images || data.images.length < 2) return;
+    const len = data.images.length;
+    const current = galleryCardIndexes[id] || 0;
+    const next = (current + dir + len) % len;
+    galleryCardIndexes[id] = next;
+    const img = document.getElementById('galleryThumb-' + id);
+    if(img) img.src = data.images[next];
+  }
+
+  let currentProduct = null;
+  let currentProductId = null;
+  let currentIndex = 0;
+
+  function openProduct(id){
+    const data = PRODUCTS_DATA[id];
+    if(!data || !data.images || !data.images.length) return;
+    currentProduct = data;
+    currentProductId = id;
+    currentIndex = 0;
+    renderModal();
+    const overlay = document.getElementById('productModalOverlay');
+    overlay.classList.add('visible');
+    requestAnimationFrame(()=> overlay.classList.add('open'));
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeProductModal(){
+    const overlay = document.getElementById('productModalOverlay');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(()=>{ overlay.classList.remove('visible'); }, 220);
+  }
+
+  function renderModal(){
+    const images = currentProduct.images;
+    document.getElementById('modalImage').src = images[currentIndex];
+    document.getElementById('modalName').textContent = currentProduct.name;
+    document.getElementById('modalDesc').textContent = currentProduct.description || '';
+    const compatEl = document.getElementById('modalCompat');
+    if(currentProduct.compatible_cars){
+      const cleanCompat = currentProduct.compatible_cars.split('\n').map(s=>s.trim().replace(/^,+|,+$/g,'').trim()).filter(Boolean).join(', ');
+      compatEl.textContent = '🚗 ' + cleanCompat;
+      compatEl.style.display = 'block';
+    } else {
+      compatEl.style.display = 'none';
+    }
+    document.getElementById('modalPrice').textContent = currentProduct.price || '';
+
+    const captionEl = document.getElementById('modalImageCaption');
+    const label = (currentProduct.imageLabels || [])[currentIndex];
+    if(label){
+      captionEl.textContent = '🚗 ' + label;
+      captionEl.style.display = 'block';
+    } else {
+      captionEl.style.display = 'none';
+    }
+
+    const badgeEl = document.getElementById('modalBadge');
+    if(currentProduct.badge){
+      badgeEl.textContent = currentProduct.badge;
+      badgeEl.style.display = 'inline-block';
+    } else {
+      badgeEl.style.display = 'none';
+    }
+
+    const stockEl = document.getElementById('modalStockBadge');
+    const stockLabels = {in_stock: I18N.stockIn, on_order: I18N.stockOrder, out_of_stock: I18N.stockOut};
+    stockEl.textContent = stockLabels[currentProduct.stockStatus] || I18N.stockIn;
+    stockEl.className = 'stock-badge stock-' + (currentProduct.stockStatus || 'in_stock');
+
+    const showNav = images.length > 1;
+    document.querySelector('#productModalOverlay .modal-nav.prev').style.display = showNav ? 'flex' : 'none';
+    document.querySelector('#productModalOverlay .modal-nav.next').style.display = showNav ? 'flex' : 'none';
+    const counter = document.getElementById('modalCounter');
+    counter.style.display = showNav ? 'block' : 'none';
+    counter.textContent = (currentIndex + 1) + ' / ' + images.length;
+
+    const thumbs = document.getElementById('modalThumbs');
+    thumbs.innerHTML = '';
+    if(showNav){
+      images.forEach((src, i)=>{
+        const t = document.createElement('img');
+        t.src = src;
+        t.className = 'modal-thumb' + (i === currentIndex ? ' active' : '');
+        t.onclick = ()=>{ currentIndex = i; renderModal(); };
+        thumbs.appendChild(t);
+      });
+      thumbs.style.display = 'flex';
+    } else {
+      thumbs.style.display = 'none';
+    }
+  }
+
+  function modalPrev(){
+    currentIndex = (currentIndex - 1 + currentProduct.images.length) % currentProduct.images.length;
+    renderModal();
+  }
+  function modalNext(){
+    currentIndex = (currentIndex + 1) % currentProduct.images.length;
+    renderModal();
+  }
+  function modalRequestQuote(){
+    closeProductModal();
+    const id = currentProductId, name = currentProduct.name;
+    setTimeout(()=>{
+      selectProductForLead(id, name);
+    }, 200);
+  }
+
+  let currentGalleryPost = null;
+  let galleryIndex = 0;
+
+  function openGalleryPost(id){
+    const data = GALLERY_DATA[id];
+    if(!data || !data.images || !data.images.length) return;
+    currentGalleryPost = data;
+    galleryIndex = 0;
+    renderGalleryModal();
+    const overlay = document.getElementById('galleryModalOverlay');
+    overlay.classList.add('visible');
+    requestAnimationFrame(()=> overlay.classList.add('open'));
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGalleryModal(){
+    const overlay = document.getElementById('galleryModalOverlay');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(()=>{ overlay.classList.remove('visible'); }, 220);
+  }
+
+  function renderGalleryModal(){
+    const images = currentGalleryPost.images;
+    document.getElementById('galleryModalImage').src = images[galleryIndex];
+    document.getElementById('galleryModalTag').textContent = currentGalleryPost.tag || '';
+
+    const brandEl = document.getElementById('galleryModalBrand');
+    if(currentGalleryPost.brand){
+      brandEl.textContent = currentGalleryPost.brand;
+      brandEl.style.display = 'inline-block';
+    } else {
+      brandEl.style.display = 'none';
+    }
+
+    const showNav = images.length > 1;
+    document.querySelector('#galleryModalOverlay .modal-nav.prev').style.display = showNav ? 'flex' : 'none';
+    document.querySelector('#galleryModalOverlay .modal-nav.next').style.display = showNav ? 'flex' : 'none';
+    const counter = document.getElementById('galleryModalCounter');
+    counter.style.display = showNav ? 'block' : 'none';
+    counter.textContent = (galleryIndex + 1) + ' / ' + images.length;
+
+    const thumbs = document.getElementById('galleryModalThumbs');
+    thumbs.innerHTML = '';
+    if(showNav){
+      images.forEach((src, i)=>{
+        const t = document.createElement('img');
+        t.src = src;
+        t.className = 'modal-thumb' + (i === galleryIndex ? ' active' : '');
+        t.onclick = ()=>{ galleryIndex = i; renderGalleryModal(); };
+        thumbs.appendChild(t);
+      });
+      thumbs.style.display = 'flex';
+    } else {
+      thumbs.style.display = 'none';
+    }
+  }
+
+  function galleryModalPrev(){
+    galleryIndex = (galleryIndex - 1 + currentGalleryPost.images.length) % currentGalleryPost.images.length;
+    renderGalleryModal();
+  }
+  function galleryModalNext(){
+    galleryIndex = (galleryIndex + 1) % currentGalleryPost.images.length;
+    renderGalleryModal();
+  }
+  function galleryModalRequestQuote(){
+    closeGalleryModal();
+    setTimeout(()=>{
+      document.getElementById('zayavka').scrollIntoView({behavior:'smooth'});
+    }, 200);
+  }
+
+  document.addEventListener('keydown', (e)=>{
+    const productOverlay = document.getElementById('productModalOverlay');
+    const galleryOverlay = document.getElementById('galleryModalOverlay');
+    if(productOverlay.classList.contains('open')){
+      if(e.key === 'Escape') closeProductModal();
+      if(e.key === 'ArrowLeft') modalPrev();
+      if(e.key === 'ArrowRight') modalNext();
+    } else if(galleryOverlay.classList.contains('open')){
+      if(e.key === 'Escape') closeGalleryModal();
+      if(e.key === 'ArrowLeft') galleryModalPrev();
+      if(e.key === 'ArrowRight') galleryModalNext();
+    }
+  });
+
+  addSwipeSupport(document.querySelector('#productModalOverlay .modal-media'), modalNext, modalPrev);
+  addSwipeSupport(document.querySelector('#galleryModalOverlay .modal-media'), galleryModalNext, galleryModalPrev);
+  document.querySelectorAll('.product-thumb').forEach(el=>{
+    const id = el.closest('.product-card')?.querySelector('[id^="cardThumb-"]')?.id?.replace('cardThumb-','');
+    if(id) addSwipeSupport(el, ()=>cycleCardImage(parseInt(id),1), ()=>cycleCardImage(parseInt(id),-1));
+  });
+  document.querySelectorAll('.gallery-item').forEach(el=>{
+    const img = el.querySelector('[id^="galleryThumb-"]');
+    const id = img ? img.id.replace('galleryThumb-','') : null;
+    if(id) addSwipeSupport(el, ()=>cycleGalleryCardImage(parseInt(id),1), ()=>cycleGalleryCardImage(parseInt(id),-1));
+  });
+
+  (function initCookieBanner(){
+    const banner = document.getElementById('cookieBanner');
+    const existing = localStorage.getItem('cookie_consent');
+    if(!existing){
+      banner.classList.add('visible');
+    } else if(existing === 'accepted' && typeof loadGoogleAnalytics === 'function'){
+      loadGoogleAnalytics();
+    }
+  })();
+
+  function handleCookieChoice(choice){
+    localStorage.setItem('cookie_consent', choice);
+    document.getElementById('cookieBanner').classList.remove('visible');
+    if(choice === 'accepted' && typeof loadGoogleAnalytics === 'function'){
+      loadGoogleAnalytics();
+    }
+  }
+</script>
+
+</body>
+</html>

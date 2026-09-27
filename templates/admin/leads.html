@@ -1,0 +1,47 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Заявки</h1>
+<div class="card">
+  {% if leads %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Дата</th><th>Име</th><th>Телефон</th><th>Автомобил</th><th>Интерес</th><th>Продукт</th><th>Услуга</th><th>Съобщение</th><th>Telegram</th><th>Статус</th><th></th></tr>
+    {% for l in leads %}
+    <tr>
+      <td>{{ l.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+      <td>{{ l.name }}</td>
+      <td><a href="tel:{{ l.phone }}">{{ l.phone }}</a></td>
+      <td>{{ l.car or '—' }}</td>
+      <td>{{ interest_options.get(l.interest, l.interest) }}</td>
+      <td>{% if l.product %}{{ l.product.name }}{% if l.product.sku %} ({{ l.product.sku }}){% endif %}{% else %}—{% endif %}</td>
+      <td>{{ l.service.title if l.service else '—' }}</td>
+      <td>{{ l.message or '—' }}</td>
+      <td>
+        {% if l.notified %}<span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">✓</span>{% else %}<span class="badge" style="background:rgba(226,34,44,0.15); color:#ff9aa0;">✗</span>{% endif %}
+        {% if l.telegram_id %}<span title="Дошла през бота — може да получи автоматична молба за отзив" style="margin-left:4px;">🤖</span>{% endif %}
+        {% if l.review_requested %}<span title="Вече е помолен за Google отзив" style="margin-left:4px;">⭐</span>{% endif %}
+      </td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_lead_status', lead_id=l.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <select name="status" onchange="this.form.submit()" style="margin:0; padding:6px 8px; font-size:12px; width:auto;">
+            {% for key, label in status_options %}
+            <option value="{{ key }}" {{ 'selected' if l.status == key }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </td>
+      <td><div class="row-actions">
+        <a class="btn btn-sm" href="{{ url_for('admin_lead_edit', lead_id=l.id) }}">Редакция</a>
+        <form method="POST" action="{{ url_for('admin_lead_delete', lead_id=l.id) }}" onsubmit="return confirm('Изтриване на заявката?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Изтрий</button>
+        </form>
+      </div></td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">Все още няма заявки.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Табло</h1>
+
+{% if not stats.telegram_configured %}
+<div class="flash" style="background:rgba(226,34,44,0.18); border-color:rgba(226,34,44,0.5);">
+  ⚠️ Telegram известията не са настроени (липсва TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID). Заявките се записват в базата, но няма да получаваш съобщение — влизай редовно в /admin/leads.
+</div>
+{% elif stats.telegram_failed > 0 %}
+<div class="flash" style="background:rgba(226,34,44,0.18); border-color:rgba(226,34,44,0.5);">
+  ⚠️ {{ stats.telegram_failed }} заявк{{ 'а' if stats.telegram_failed == 1 else 'и' }} не са успели да изпратят Telegram известие. Всички са безопасно запазени в базата — виж таблицата по-долу.
+</div>
+{% endif %}
+
+<div class="stat-grid">
+  <div class="stat"><b>{{ stats.leads }}</b><span>Заявки общо</span></div>
+  <div class="stat"><b>{{ stats.leads_new }}</b><span>Непрегледани</span></div>
+  <div class="stat"><b>{{ stats.products }}</b><span>Продукти</span></div>
+  <div class="stat"><b>{{ stats.gallery }}</b><span>Снимки в галерия</span></div>
+</div>
+
+{% if failed_leads %}
+<div class="card">
+  <h2 style="font-size:16px; margin-bottom:16px; color:#ff9aa0;">Заявки без изпратено Telegram известие</h2>
+  <table>
+    <tr><th>Име</th><th>Телефон</th><th>Дата</th></tr>
+    {% for l in failed_leads %}
+    <tr>
+      <td>{{ l.name }}</td>
+      <td>{{ l.phone }}</td>
+      <td>{{ l.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2 style="font-size:16px; margin-bottom:16px;">Последни заявки</h2>
+  {% if recent_leads %}
+  <table>
+    <tr><th>Име</th><th>Телефон</th><th>Автомобил</th><th>Дата</th></tr>
+    {% for l in recent_leads %}
+    <tr>
+      <td>{{ l.name }}</td>
+      <td>{{ l.phone }}</td>
+      <td>{{ l.car or '—' }}</td>
+      <td>{{ l.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">Все още няма заявки.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Редакция на заявка</h1>
+<div class="card" style="max-width:520px;">
+  <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Име</label>
+    <input type="text" name="name" value="{{ lead.name }}" required>
+
+    <label>Телефон</label>
+    <input type="text" name="phone" value="{{ lead.phone }}" required>
+
+    <label>Марка и модел</label>
+    <input type="text" name="car" value="{{ lead.car or '' }}">
+
+    <label>Интересува се от</label>
+    <select name="interest">
+      {% for value, label in interest_options %}
+      <option value="{{ value }}" {{ 'selected' if lead.interest == value }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Съобщение</label>
+    <textarea name="message" rows="4">{{ lead.message or '' }}</textarea>
+
+    <label>Статус</label>
+    <select name="status">
+      {% for value, label in status_options %}
+      <option value="{{ value }}" {{ 'selected' if lead.status == value }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-primary">Запази</button>
+    <a href="{{ url_for('admin_leads') }}" class="btn">Отказ</a>
+  </form>
+</div>
+{% endblock %}

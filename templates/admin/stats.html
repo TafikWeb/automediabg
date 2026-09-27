@@ -1,0 +1,35 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Статистика</h1>
+
+<div class="stat-grid">
+  <div class="stat"><b>{{ total }}</b><span>Заявки общо</span></div>
+  <div class="stat"><b>{{ sold }}</b><span>Продадени</span></div>
+  <div class="stat"><b>{{ declined }}</b><span>Отказали</span></div>
+  <div class="stat">
+    <b>{{ conversion_rate ~ '%' if conversion_rate is not none else '—' }}</b>
+    <span>Конверсия (продадени/решени)</span>
+  </div>
+</div>
+
+<div class="card" style="max-width:520px;">
+  <h2 style="font-size:15px; margin-bottom:18px;">По статус</h2>
+  {% for label, count in status_breakdown %}
+  <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:14px;">
+    <span>{{ label }}</span>
+    <b>{{ count }}</b>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card" style="max-width:520px;">
+  <h2 style="font-size:15px; margin-bottom:6px;">Търсене по вид (на какво да наблегнеш)</h2>
+  <p style="color:var(--gray); font-size:12px; margin-bottom:16px;">Подредено по брой заявки — най-търсеното е отгоре.</p>
+  {% for label, count in interest_breakdown %}
+  <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:14px;">
+    <span>{{ label }}</span>
+    <b>{{ count }}</b>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

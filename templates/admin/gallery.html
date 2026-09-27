@@ -1,0 +1,35 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+  <h1 style="margin:0;">Галерия — Монтирани от нас</h1>
+  <a href="{{ url_for('admin_gallery_new') }}" class="btn btn-primary">+ Нова обява</a>
+</div>
+
+<div class="card">
+  {% if posts %}
+  <div class="table-scroll"><table>
+    <tr><th></th><th>Надпис</th><th>Марка</th><th>Снимки</th><th>Статус</th><th>Действия</th></tr>
+    {% for post in posts %}
+    <tr>
+      <td>{% if post.images %}<img class="thumb" src="{{ url_for('uploaded_file', filename=post.images[0].image_path) }}">{% endif %}</td>
+      <td>{{ post.tag or '—' }}</td>
+      <td>{{ post.brand.name if post.brand else '—' }}</td>
+      <td>{{ post.images|length }}</td>
+      <td>{% if post.published %}<span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">Публикувана</span>{% else %}<span class="badge" style="background:rgba(154,154,160,0.15); color:var(--gray);">Скрита</span>{% endif %}</td>
+      <td><div class="row-actions">
+        <a class="btn btn-sm" href="{{ url_for('admin_gallery_edit', post_id=post.id) }}">Редакция</a>
+        <form method="POST" action="{{ url_for('admin_gallery_toggle', post_id=post.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" type="submit">{{ 'Скрий' if post.published else 'Публикувай' }}</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin_gallery_delete', post_id=post.id) }}" onsubmit="return confirm('Изтриване на обявата с всичките ѝ снимки?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Изтрий</button>
+        </form>
+      </div></td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+  <div class="empty">Все още няма обяви — добави първата от бутона отгоре.</div>
+  {% endif %}
+</div>
+{% endblock %}

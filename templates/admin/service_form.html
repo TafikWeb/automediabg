@@ -1,0 +1,20 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>{{ 'Редакция на услуга' if service else 'Нова услуга' }}</h1>
+<div class="card" style="max-width:480px;">
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Икона (емоджи, напр. 🔧 📻 🎥)</label>
+    <input type="text" name="icon" value="{{ service.icon if service else '🛠️' }}" maxlength="4" style="width:80px; font-size:20px; text-align:center;">
+
+    <label>Заглавие</label>
+    <input type="text" name="title" value="{{ service.title if service else '' }}" required>
+
+    <label>Описание</label>
+    <textarea name="description" rows="3">{{ service.description if service else '' }}</textarea>
+
+    <button type="submit" class="btn btn-primary">Запази</button>
+    <a href="{{ url_for('admin_services') }}" class="btn">Отказ</a>
+  </form>
+</div>
+{% endblock %}

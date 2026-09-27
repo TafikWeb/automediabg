@@ -1,0 +1,37 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Марки автомобили</h1>
+<p style="color:var(--gray); font-size:13px; margin-bottom:24px; margin-top:-14px;">
+  Тези марки се показват като филтри в секция "Монтирани от нас" на сайта.
+</p>
+
+<div class="card" style="max-width:420px;">
+  <h2 style="font-size:15px; margin-bottom:16px;">Добави марка</h2>
+  <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Име (напр. VW, Audi, Seat)</label>
+    <input type="text" name="name" placeholder="напр. VW" required>
+    <button type="submit" class="btn btn-primary">Добави</button>
+  </form>
+</div>
+
+<div class="card">
+  {% if brands %}
+  <div class="table-scroll"><table>
+    <tr><th>Марка</th><th>Снимки</th><th></th></tr>
+    {% for b in brands %}
+    <tr>
+      <td>{{ b.name }}</td>
+      <td>{{ b.gallery_posts|length }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_brand_delete', brand_id=b.id) }}" onsubmit="return confirm('Изтриване на марката \'{{ b.name }}\'? Снимките остават, но без марка.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Изтрий</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+  <div class="empty">Все още няма добавени марки — добави първата отгоре (напр. VW, Audi, Seat).</div>
+  {% endif %}
+</div>
+{% endblock %}

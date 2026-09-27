@@ -1,0 +1,35 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+  <h1 style="margin:0;">Варианти в заявката</h1>
+  <a href="{{ url_for('admin_interest_new') }}" class="btn btn-primary">+ Нов вариант</a>
+</div>
+<p style="color:var(--gray); font-size:13px; margin:-14px 0 24px;">
+  Това е падащото меню "Интересувам се от" във формата за заявка на сайта. Ред отгоре надолу тук = ред в менюто.
+</p>
+
+<div class="card">
+  {% if options %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Текст</th><th>Статус</th><th></th></tr>
+    {% for o in options %}
+    <tr>
+      <td>{{ o.label }}</td>
+      <td>{% if o.published %}<span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">Публикуван</span>{% else %}<span class="badge" style="background:rgba(154,154,160,0.15); color:var(--gray);">Скрит</span>{% endif %}</td>
+      <td><div class="row-actions">
+        <form method="POST" action="{{ url_for('admin_interest_move', option_id=o.id, direction='up') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">↑</button></form>
+        <form method="POST" action="{{ url_for('admin_interest_move', option_id=o.id, direction='down') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">↓</button></form>
+        <a class="btn btn-sm" href="{{ url_for('admin_interest_edit', option_id=o.id) }}">Редакция</a>
+        <form method="POST" action="{{ url_for('admin_interest_toggle', option_id=o.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">{{ 'Скрий' if o.published else 'Публикувай' }}</button></form>
+        <form method="POST" action="{{ url_for('admin_interest_delete', option_id=o.id) }}" onsubmit="return confirm('Изтриване на варианта? Стари заявки с него остават непроменени.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Изтрий</button></form>
+      </div></td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">Все още няма варианти.</div>
+  {% endif %}
+</div>
+{% endblock %}

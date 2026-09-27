@@ -1,0 +1,33 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+  <h1 style="margin:0;">Въпроси и отговори (FAQ)</h1>
+  <a href="{{ url_for('admin_faq_new') }}" class="btn btn-primary">+ Нов въпрос</a>
+</div>
+
+<div class="card">
+  {% if faqs %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Въпрос</th><th>Отговор</th><th>Статус</th><th></th></tr>
+    {% for f in faqs %}
+    <tr>
+      <td style="max-width:220px; white-space:normal;">{{ f.question }}</td>
+      <td style="max-width:280px; white-space:normal;">{{ f.answer[:80] }}{% if f.answer|length > 80 %}…{% endif %}</td>
+      <td>{% if f.published %}<span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">Публикуван</span>{% else %}<span class="badge" style="background:rgba(154,154,160,0.15); color:var(--gray);">Скрит</span>{% endif %}</td>
+      <td><div class="row-actions">
+        <form method="POST" action="{{ url_for('admin_faq_move', faq_id=f.id, direction='up') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">↑</button></form>
+        <form method="POST" action="{{ url_for('admin_faq_move', faq_id=f.id, direction='down') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">↓</button></form>
+        <a class="btn btn-sm" href="{{ url_for('admin_faq_edit', faq_id=f.id) }}">Редакция</a>
+        <form method="POST" action="{{ url_for('admin_faq_toggle', faq_id=f.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">{{ 'Скрий' if f.published else 'Публикувай' }}</button></form>
+        <form method="POST" action="{{ url_for('admin_faq_delete', faq_id=f.id) }}" onsubmit="return confirm('Изтриване на въпроса?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Изтрий</button></form>
+      </div></td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">Все още няма добавени въпроси.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Линкове</h1>
+<p style="color:var(--gray); font-size:13px; margin-bottom:24px; margin-top:-14px;">
+  Тези линкове се показват в контакти/футъра на сайта. Остави поле празно, за да не се показва бутонът за него.
+</p>
+<div class="card" style="max-width:560px;">
+  <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% for link in links %}
+    <label>{{ link.label or link.key }}</label>
+    <input type="text" name="url_{{ link.key }}" value="{{ link.url or '' }}" placeholder="напр. https://...">
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Запази</button>
+  </form>
+</div>
+{% endblock %}

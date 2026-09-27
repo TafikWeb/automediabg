@@ -1,0 +1,50 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Партньори</h1>
+
+<div class="stat-grid">
+  <div class="stat"><b>{{ stats.total }}</b><span>Общо кандидатури</span></div>
+  <div class="stat"><b>{{ stats.pending }}</b><span>Чакат одобрение</span></div>
+  <div class="stat"><b>{{ stats.approved }}</b><span>Одобрени</span></div>
+</div>
+
+<div class="card">
+  {% if partners %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Код</th><th>Име</th><th>Телефон</th><th>Тип</th><th>Дейност</th><th>Статус</th><th>Клиенти</th><th>Дължиш</th><th></th><th></th></tr>
+    {% for p in partners %}
+    <tr>
+      <td>{{ p.code }}</td>
+      <td>{{ p.full_name }}{% if p.username %} (@{{ p.username }}){% endif %}</td>
+      <td>{{ p.phone or '—' }}</td>
+      <td>{{ 'Фирма' if p.is_company else 'Частно лице' }}</td>
+      <td style="max-width:220px; white-space:normal;">{{ p.activity or '—' }}</td>
+      <td>
+        {% if p.status == 'approved' %}<span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">Одобрен</span>
+        {% elif p.status == 'declined' %}<span class="badge" style="background:rgba(226,34,44,0.15); color:#ff9aa0;">Отказан</span>
+        {% else %}<span class="badge" style="background:rgba(230,180,60,0.15); color:#e6c060;">Чака</span>{% endif %}
+      </td>
+      <td>{{ p.referrals|length }}</td>
+      <td>
+        {% if owed_by_partner.get(p.id) %}
+          <span class="badge" style="background:rgba(230,180,60,0.15); color:#e6c060;">
+            {% for cur, amt in owed_by_partner[p.id].items() %}{{ '%.2f'|format(amt) }} {{ cur }}{% if not loop.last %} + {% endif %}{% endfor %}
+          </span>
+        {% else %}—{% endif %}
+      </td>
+      <td><a class="btn btn-sm" href="{{ url_for('admin_partner_detail', partner_id=p.id) }}">Отвори</a></td>
+      <td>
+        <form method="POST" action="{{ url_for('admin_partner_delete', partner_id=p.id) }}" onsubmit="return confirm('Изтриване на партньора? Достъпът му до бота ще се нулира.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Изтрий</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">Все още няма кандидатури за партньори.</div>
+  {% endif %}
+</div>
+{% endblock %}

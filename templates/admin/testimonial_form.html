@@ -1,0 +1,53 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>{{ 'Редакция на отзив' if testimonial else 'Нов отзив' }}</h1>
+<div class="card" style="max-width:520px;">
+  {% if testimonial and testimonial.media_path %}
+  <div style="margin-bottom:20px;">
+    {% if testimonial.media_type == 'video' %}
+    <video src="{{ url_for('uploaded_file', filename=testimonial.media_path) }}" controls style="width:100%; max-width:280px; border-radius:6px; border:1px solid var(--line);"></video>
+    {% else %}
+    <img src="{{ url_for('uploaded_file', filename=testimonial.media_path) }}" style="width:100%; max-width:280px; border-radius:6px; border:1px solid var(--line);">
+    {% endif %}
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      {% if testimonial.media_type != 'video' %}
+      <form method="POST" action="{{ url_for('admin_testimonial_rotate_media', testimonial_id=testimonial.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm" title="Завърти на 90°">↻ Завърти</button>
+      </form>
+      {% endif %}
+      <form method="POST" action="{{ url_for('admin_testimonial_remove_media', testimonial_id=testimonial.id) }}" onsubmit="return confirm('Премахване на медията от този отзив?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-sm btn-danger">Премахни снимката/клипа</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Име на клиента</label>
+    <input type="text" name="author_name" value="{{ testimonial.author_name if testimonial else '' }}" required>
+
+    <label>Автомобил (по избор)</label>
+    <input type="text" name="car_model" value="{{ testimonial.car_model if testimonial else '' }}" placeholder="напр. VW Golf 7">
+
+    <label>Текст на отзива</label>
+    <textarea name="text" rows="4" required>{{ testimonial.text if testimonial else '' }}</textarea>
+
+    <label>Оценка (1-5 звезди)</label>
+    <select name="rating">
+      {% for i in range(5, 0, -1) %}
+      <option value="{{ i }}" {{ 'selected' if testimonial and testimonial.rating == i or (not testimonial and i == 5) }}>{{ '★' * i }}{{ '☆' * (5-i) }}</option>
+      {% endfor %}
+    </select>
+
+    <label>{{ 'Смени снимка/клип (по избор)' if testimonial and testimonial.media_path else 'Снимка или кратко видео (по избор)' }}</label>
+    <input type="file" name="media" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm,video/quicktime">
+    <p style="color:var(--gray); font-size:11px; margin:-10px 0 16px;">Снимка — png/jpg/webp. Видео — mp4/webm/mov, до 25MB.</p>
+
+    <button type="submit" class="btn btn-primary">Запази</button>
+    <a href="{{ url_for('admin_testimonials') }}" class="btn">Отказ</a>
+  </form>
+</div>
+{% endblock %}

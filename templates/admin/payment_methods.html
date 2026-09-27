@@ -1,0 +1,67 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>Настройки и превключватели</h1>
+
+<h2 style="font-size:15px; margin-bottom:6px;">Езикови версии на сайта</h2>
+<p style="color:var(--gray); font-size:13px; margin-bottom:16px;">
+  Изключена версия изчезва от превключвателя на езика и линкът пренасочва автоматично към българската версия.
+</p>
+<div class="card" style="max-width:480px; margin-bottom:30px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--line);">
+    <span style="font-size:14px;">🇧🇬 Български</span>
+    <span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">Винаги включен</span>
+  </div>
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--line);">
+    <span style="font-size:14px;">🇬🇧 English</span>
+    <form method="POST" action="{{ url_for('admin_language_toggle', lang_code='en') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-sm" style="{{ 'background:rgba(60,180,90,0.15); color:#7fe0a0;' if lang_en_enabled else 'background:rgba(154,154,160,0.15); color:var(--gray);' }}">
+        {{ 'Включен' if lang_en_enabled else 'Изключен' }}
+      </button>
+    </form>
+  </div>
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0;">
+    <span style="font-size:14px;">🇷🇺 Русский</span>
+    <form method="POST" action="{{ url_for('admin_language_toggle', lang_code='ru') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-sm" style="{{ 'background:rgba(60,180,90,0.15); color:#7fe0a0;' if lang_ru_enabled else 'background:rgba(154,154,160,0.15); color:var(--gray);' }}">
+        {{ 'Включен' if lang_ru_enabled else 'Изключен' }}
+      </button>
+    </form>
+  </div>
+</div>
+
+<h2 style="font-size:15px; margin-bottom:12px;">Функции в менюто на бота</h2>
+<p style="color:var(--gray); font-size:13px; margin-bottom:16px;">
+  Изключените функции изчезват от главното меню на бота за всички.
+</p>
+<div class="card" style="max-width:480px; margin-bottom:30px;">
+  {% for f in features %}
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--line);">
+    <span style="font-size:14px;">{{ f.label }}</span>
+    <form method="POST" action="{{ url_for('admin_bot_feature_toggle', feature_id=f.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-sm" style="{{ 'background:rgba(60,180,90,0.15); color:#7fe0a0;' if f.enabled else 'background:rgba(154,154,160,0.15); color:var(--gray);' }}">
+        {{ 'Включена' if f.enabled else 'Изключена' }}
+      </button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+
+<h2 style="font-size:15px; margin-bottom:6px;">Методи на плащане (за партньори)</h2>
+<p style="color:var(--gray); font-size:13px; margin-bottom:16px;">
+  Изключените методи изчезват от менюто на бота при заявка за теглене — партньорите виждат
+  само активните и трябва да изберат друг, ако предпочитаният им е временно изключен.
+</p>
+
+<div class="card" style="max-width:480px;">
+  {% for m in methods %}
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid var(--line);">
+    <span style="font-size:14px;">{{ m.label }}</span>
+    <form method="POST" action="{{ url_for('admin_payment_method_toggle', method_id=m.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-sm" style="{{ 'background:rgba(60,180,90,0.15); color:#7fe0a0;' if m.enabled else 'background:rgba(154,154,160,0.15); color:var(--gray);' }}">
+        {{ 'Включен' if m.enabled else 'Изключен' }}
+      </button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

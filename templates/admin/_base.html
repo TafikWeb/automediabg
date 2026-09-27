@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Админ · AutoMediaBG</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0a0b; --surface:#141416; --surface-2:#1c1c1f; --line:#28282c; --white:#f4f4f2; --gray:#9a9aa0; --red:#e2222c;}
+  *{box-sizing:border-box; margin:0; padding:0;}
+  button{font-family:inherit;}
+  body{background:var(--bg); color:var(--white); font-family:'Manrope',sans-serif; display:flex; min-height:100vh;}
+  a{color:inherit; text-decoration:none;}
+  .sidebar{width:230px; background:var(--surface); border-right:1px solid var(--line); padding:26px 20px; flex-shrink:0;}
+  .sidebar .logo{font-family:'Archivo Black'; font-size:18px; margin-bottom:36px;}
+  .sidebar .logo span{color:var(--red);}
+  .sidebar nav a{display:block; padding:11px 12px; border-radius:4px; font-size:14px; font-weight:600; color:var(--gray); margin-bottom:4px;}
+  .sidebar nav a:hover{background:var(--surface-2); color:var(--white);}
+  .sidebar nav a.active{background:rgba(226,34,44,0.12); color:var(--white); border-left:2px solid var(--red);}
+  .sidebar .logout{margin-top:30px; font-size:12px; color:var(--gray); border-top:1px solid var(--line); padding-top:18px; display:block;}
+  .sidebar .logout:hover{color:var(--red);}
+  main{flex:1; padding:36px 44px; max-width:1000px;}
+  h1{font-family:'Archivo Black'; font-size:24px; text-transform:uppercase; margin-bottom:24px;}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:24px; margin-bottom:20px;}
+  .flash{background:rgba(226,34,44,0.12); border:1px solid rgba(226,34,44,0.3); color:#ff9aa0; padding:12px 16px; border-radius:4px; margin-bottom:20px; font-size:14px;}
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  th, td{text-align:left; padding:12px 10px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  .row-actions{display:flex; gap:8px; align-items:center;}
+  th{color:var(--gray); font-size:11px; text-transform:uppercase; letter-spacing:0.5px;}
+  td form{display:inline-block; margin:0; vertical-align:middle;}
+  .btn{display:inline-flex; align-items:center; gap:6px; padding:10px 18px; font-weight:700; font-size:13px; border-radius:4px; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--white);}
+  .btn-primary{background:var(--red); border-color:var(--red); color:#fff;}
+  .btn-danger{color:#ff8a90; border-color:rgba(226,34,44,0.4);}
+  .btn-sm{padding:6px 12px; font-size:12px;}
+  label{font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--gray); font-weight:700; margin-bottom:8px; display:block;}
+  input, textarea, select{width:100%; background:var(--bg); border:1px solid var(--line); color:var(--white); padding:12px 14px; font-family:'Manrope'; font-size:14px; border-radius:3px; outline:none; margin-bottom:16px;}
+  input:focus, textarea:focus{border-color:var(--red);}
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:30px;}
+  .stat{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:20px;}
+  .stat b{font-family:'Archivo Black'; font-size:26px; display:block;}
+  .stat span{font-size:12px; color:var(--gray); text-transform:uppercase;}
+  .thumb{width:60px; height:45px; object-fit:cover; border-radius:3px; background:var(--surface-2);}
+  .badge{background:rgba(226,34,44,0.15); color:var(--red); font-size:11px; padding:3px 8px; border-radius:3px; font-weight:700;}
+  .empty{color:var(--gray); text-align:center; padding:40px; font-size:14px;}
+
+  @media (max-width:800px){
+    body{flex-direction:column;}
+    .sidebar{width:100%; display:flex; align-items:center; gap:6px; padding:14px 16px; overflow-x:auto; white-space:nowrap;}
+    .sidebar .logo{flex-shrink:0; margin-right:6px;}
+    .sidebar nav{display:flex; gap:4px;}
+    .sidebar nav a{white-space:nowrap; margin-bottom:0;}
+    .sidebar .logout{margin:0 0 0 6px; border-top:none; padding:0; flex-shrink:0;}
+    main{padding:20px 16px; max-width:100%;}
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+{% if session.get('is_admin') %}
+<div class="sidebar">
+  <div class="logo">AUTO<span>MEDIA</span>BG</div>
+  <nav>
+    <a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if request.endpoint=='admin_dashboard' }}">Табло</a>
+    <a href="{{ url_for('admin_leads') }}" class="{{ 'active' if request.endpoint=='admin_leads' }}">Заявки</a>
+    <a href="{{ url_for('admin_stats') }}" class="{{ 'active' if request.endpoint=='admin_stats' }}">Статистика</a>
+    <a href="{{ url_for('admin_products') }}" class="{{ 'active' if request.endpoint in ['admin_products','admin_product_new','admin_product_edit'] }}">Продукти</a>
+    <a href="{{ url_for('admin_services') }}" class="{{ 'active' if request.endpoint in ['admin_services','admin_service_new','admin_service_edit'] }}">Услуги</a>
+    <a href="{{ url_for('admin_interests') }}" class="{{ 'active' if request.endpoint in ['admin_interests','admin_interest_new','admin_interest_edit'] }}">Варианти в заявката</a>
+    <a href="{{ url_for('admin_gallery') }}" class="{{ 'active' if request.endpoint in ['admin_gallery','admin_gallery_new','admin_gallery_edit'] }}">Галерия</a>
+    <a href="{{ url_for('admin_brands') }}" class="{{ 'active' if request.endpoint=='admin_brands' }}">Марки</a>
+    <a href="{{ url_for('admin_logo') }}" class="{{ 'active' if request.endpoint=='admin_logo' }}">Лого</a>
+    <a href="{{ url_for('admin_testimonials') }}" class="{{ 'active' if request.endpoint in ['admin_testimonials','admin_testimonial_new','admin_testimonial_edit'] }}">Отзиви</a>
+    <a href="{{ url_for('admin_faq') }}" class="{{ 'active' if request.endpoint in ['admin_faq','admin_faq_new','admin_faq_edit'] }}">Въпроси/FAQ</a>
+    <a href="{{ url_for('admin_links') }}" class="{{ 'active' if request.endpoint=='admin_links' }}">Линкове</a>
+    <a href="{{ url_for('admin_telegram') }}" class="{{ 'active' if request.endpoint=='admin_telegram' }}">Telegram общност</a>
+    <a href="{{ url_for('admin_partners') }}" class="{{ 'active' if request.endpoint in ['admin_partners','admin_partner_detail'] }}">Партньори</a>
+    <a href="{{ url_for('admin_payment_methods') }}" class="{{ 'active' if request.endpoint=='admin_payment_methods' }}">Настройки</a>
+    <a href="/" target="_blank">Виж сайта →</a>
+  </nav>
+  <a class="logout" href="{{ url_for('admin_logout') }}">Изход</a>
+  <div style="padding:10px 24px; color:var(--gray); font-size:11px; opacity:0.6;">
+    Версия {{ site_version }}
+  </div>
+</div>
+{% endif %}
+<main>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

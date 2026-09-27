@@ -1,0 +1,180 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>{{ 'Редакция на продукт' if product else 'Нов продукт' }}</h1>
+<div class="card" style="max-width:640px;">
+  <form method="POST" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Име</label>
+    <input type="text" name="name" value="{{ product.name if product else '' }}" required>
+
+    <label>Код на продукта (SKU, напр. CP605) — по избор, за да го разпознаваш в заявките</label>
+    <input type="text" name="sku" value="{{ product.sku if product else '' }}" placeholder="напр. CP605">
+
+    <label>Описание</label>
+    <textarea name="description" rows="3">{{ product.description if product else '' }}</textarea>
+
+    <label>Съвместими автомобили (по един на ред или разделени със запетая — помага и за търсене в Google)</label>
+    <textarea name="compatible_cars" rows="3" placeholder="напр.&#10;VW Golf 5&#10;VW Golf 6&#10;Skoda Octavia 2">{{ product.compatible_cars if product else '' }}</textarea>
+
+    <label>Цена (текст, напр. "от 349 лв")</label>
+    <input type="text" name="price" value="{{ product.price if product else '' }}">
+
+    <label>Значка (незадължително, напр. "Топ продажба")</label>
+    <input type="text" name="badge" value="{{ product.badge if product else '' }}">
+
+    <label>Наличност</label>
+    <select name="stock_status">
+      <option value="in_stock" {{ 'selected' if not product or product.stock_status == 'in_stock' }}>Налично</option>
+      <option value="on_order" {{ 'selected' if product and product.stock_status == 'on_order' }}>Очаква се доставка</option>
+      <option value="out_of_stock" {{ 'selected' if product and product.stock_status == 'out_of_stock' }}>Изчерпано</option>
+    </select>
+
+    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+      <input type="checkbox" name="is_bestseller" value="1" style="width:auto;" {{ 'checked' if product and product.is_bestseller }}>
+      🔥 Бестселър (показва се най-отгоре в продуктите — препоръчваме да маркираш 3-5 продукта максимум, за да си личи)
+    </label>
+
+    <label>Марки (за групите/филтрите — избери всички, за които пасва)</label>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+      {% for brand in all_brands %}
+      <label style="display:flex; align-items:center; gap:5px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; padding:6px 10px; font-size:12px; cursor:pointer; font-weight:400;">
+        <input type="checkbox" name="brand_ids" value="{{ brand.id }}" style="width:auto;" {{ 'checked' if product and brand in product.brands }}>
+        {{ brand.name }}
+      </label>
+      {% endfor %}
+      {% if not all_brands %}
+      <span style="color:var(--gray); font-size:12px;">Няма добавени марки — добави ги от "Марки" в менюто вляво.</span>
+      {% endif %}
+    </div>
+
+    <label>
+      {% if product %}
+        Добави още снимки ({{ product.images|length }}/{{ max_images }} качени)
+      {% else %}
+        Снимки (до {{ max_images }}, избери няколко наведнъж)
+      {% endif %}
+    </label>
+    <input type="file" name="images" id="imagesInput" accept="image/png,image/jpeg,image/webp" multiple>
+    <div id="imagesPreview" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
+    <p id="imagesPreviewHint" style="display:none; color:var(--gray); font-size:11px; margin-top:-4px;">
+      Подреди преди да запазиш — първата снимка ще е корицата.
+    </p>
+
+    <button type="submit" class="btn btn-primary">Запази</button>
+    <a href="{{ url_for('admin_products') }}" class="btn">Отказ</a>
+  </form>
+
+  <script>
+  (function(){
+    const input = document.getElementById('imagesInput');
+    const preview = document.getElementById('imagesPreview');
+    const hint = document.getElementById('imagesPreviewHint');
+    let files = [];
+
+    input.addEventListener('change', function(){
+      files = Array.from(input.files);
+      render();
+    });
+
+    function syncInput(){
+      const dt = new DataTransfer();
+      files.forEach(f => dt.items.add(f));
+      input.files = dt.files;
+    }
+
+    function render(){
+      preview.innerHTML = '';
+      hint.style.display = files.length ? 'block' : 'none';
+      files.forEach((file, idx) => {
+        const url = URL.createObjectURL(file);
+        const div = document.createElement('div');
+        div.innerHTML =
+          '<div style="position:relative;">' +
+            '<img src="' + url + '" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; border:1px solid var(--line); ' + (idx===0 ? 'outline:2px solid var(--red);' : '') + '">' +
+            (idx===0 ? '<span style="position:absolute; bottom:4px; left:4px; background:var(--red); color:#fff; font-size:9px; font-weight:800; padding:2px 6px; border-radius:2px; text-transform:uppercase;">Корица</span>' : '') +
+            '<button type="button" data-action="remove" data-idx="' + idx + '" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.75); color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:12px; line-height:1;">✕</button>' +
+          '</div>' +
+          '<div style="display:flex; gap:4px; margin-top:6px;">' +
+            (idx!==0 ? '<button type="button" class="btn btn-sm" data-action="cover" data-idx="' + idx + '" style="flex:1; padding:5px; font-size:10px;" title="Направи корица">★</button>' : '') +
+            (idx!==0 ? '<button type="button" class="btn btn-sm" data-action="left" data-idx="' + idx + '" style="padding:5px 8px; font-size:10px;" title="Наляво">←</button>' : '') +
+            (idx!==files.length-1 ? '<button type="button" class="btn btn-sm" data-action="right" data-idx="' + idx + '" style="padding:5px 8px; font-size:10px;" title="Надясно">→</button>' : '') +
+          '</div>';
+        preview.appendChild(div);
+      });
+      syncInput();
+    }
+
+    preview.addEventListener('click', function(e){
+      const btn = e.target.closest('button[data-action]');
+      if(!btn) return;
+      const idx = parseInt(btn.dataset.idx, 10);
+      const action = btn.dataset.action;
+      if(action === 'remove'){
+        files.splice(idx, 1);
+      } else if(action === 'cover'){
+        const item = files.splice(idx, 1)[0];
+        files.unshift(item);
+      } else if(action === 'left' && idx > 0){
+        [files[idx-1], files[idx]] = [files[idx], files[idx-1]];
+      } else if(action === 'right' && idx < files.length - 1){
+        [files[idx+1], files[idx]] = [files[idx], files[idx+1]];
+      }
+      render();
+    });
+  })();
+  </script>
+
+  {% if product and product.images %}
+  <div style="margin-top:34px; padding-top:24px; border-top:1px solid var(--line);">
+    <h3 style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--gray); margin-bottom:6px;">
+      Качени снимки — първата е корицата на обявата
+    </h3>
+    <p style="color:var(--gray); font-size:11px; margin-bottom:16px;">
+      Полето "На кой автомобил" се показва като надпис върху снимката на сайта — полезно, ако продуктът пасва на няколко модела и всяка снимка е от различна кола.
+    </p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:14px;">
+      {% for img in product.images %}
+      <div>
+        <div style="position:relative;">
+          <img src="{{ url_for('uploaded_file', filename=img.image_path) }}"
+               style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; border:1px solid var(--line); {{ 'outline:2px solid var(--red);' if loop.first }}">
+          {% if loop.first %}
+          <span style="position:absolute; bottom:4px; left:4px; background:var(--red); color:#fff; font-size:9px; font-weight:800; padding:2px 6px; border-radius:2px; text-transform:uppercase;">Корица</span>
+          {% endif %}
+          <form method="POST" action="{{ url_for('admin_product_image_delete', product_id=product.id, image_id=img.id) }}"
+                onsubmit="return confirm('Премахване на тази снимка от продукта?');"
+                style="position:absolute; top:4px; right:4px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" style="background:rgba(0,0,0,0.75); color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:12px; line-height:1; display:flex; align-items:center; justify-content:center; padding:0; font-family:inherit;">✕</button>
+          </form>
+        </div>
+        <div style="display:flex; gap:4px; margin-top:6px;">
+          {% if not loop.first %}
+          <form method="POST" action="{{ url_for('admin_product_image_cover', product_id=product.id, image_id=img.id) }}" style="flex:1;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm" style="width:100%; padding:5px; font-size:10px;" title="Направи корица">★</button>
+          </form>
+          {% endif %}
+          {% if not loop.first %}
+          <form method="POST" action="{{ url_for('admin_product_image_move', product_id=product.id, image_id=img.id, direction='left') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm" style="padding:5px 8px; font-size:10px;" title="Премести наляво">←</button>
+          </form>
+          {% endif %}
+          {% if not loop.last %}
+          <form method="POST" action="{{ url_for('admin_product_image_move', product_id=product.id, image_id=img.id, direction='right') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm" style="padding:5px 8px; font-size:10px;" title="Премести надясно">→</button>
+          </form>
+          {% endif %}
+          <form method="POST" action="{{ url_for('admin_product_image_rotate', product_id=product.id, image_id=img.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm" style="padding:5px 8px; font-size:10px;" title="Завърти на 90°">↻</button>
+          </form>
+        </div>
+        <form method="POST" action="{{ url_for('admin_product_image_label', product_id=product.id, image_id=img.id) }}" style="display:flex; gap:4px; margin-top:6px;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="car_label" value="{{ img.car_label or '' }}" placeholder="На кой автомобил?" style="margin:0; padding:6px 8px; font-size:11px;">
+          <button type="submit" class="btn btn-sm" style="padding:5px 8px; font-size:10px;" title="Запази надписа">✓</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>{{ 'Редакция на обява' if post else 'Нова обява' }}</h1>
+<div class="card" style="max-width:640px;">
+  <form method="POST" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Надпис (напр. "VW Golf 7 · CarPlay екран")</label>
+    <input type="text" name="tag" value="{{ post.tag if post else '' }}">
+
+    <label>Марка</label>
+    <select name="brand_id">
+      <option value="">— без марка —</option>
+      {% for b in brands %}
+      <option value="{{ b.id }}" {{ 'selected' if post and post.brand_id == b.id }}>{{ b.name }}</option>
+      {% endfor %}
+    </select>
+    {% if not brands %}
+    <p style="color:var(--gray); font-size:12px; margin:-10px 0 16px;">
+      Нямаш добавени марки — <a href="{{ url_for('admin_brands') }}" style="color:var(--red);">добави марка</a> (VW, Audi, Seat...).
+    </p>
+    {% endif %}
+
+    <label>
+      {% if post %}
+        Добави още снимки ({{ post.images|length }}/{{ max_images }} качени)
+      {% else %}
+        Снимки (до {{ max_images }}, избери няколко наведнъж)
+      {% endif %}
+    </label>
+    <input type="file" name="images" id="imagesInput" accept="image/png,image/jpeg,image/webp" multiple>
+    <div id="imagesPreview" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
+    <p id="imagesPreviewHint" style="display:none; color:var(--gray); font-size:11px; margin-top:-4px;">
+      Подреди преди да запазиш — първата снимка ще е корицата.
+    </p>
+
+    <button type="submit" class="btn btn-primary">Запази</button>
+    <a href="{{ url_for('admin_gallery') }}" class="btn">Отказ</a>
+  </form>
+
+  <script>
+  (function(){
+    const input = document.getElementById('imagesInput');
+    const preview = document.getElementById('imagesPreview');
+    const hint = document.getElementById('imagesPreviewHint');
+    let files = [];
+
+    input.addEventListener('change', function(){
+      files = Array.from(input.files);
+      render();
+    });
+
+    function syncInput(){
+      const dt = new DataTransfer();
+      files.forEach(f => dt.items.add(f));
+      input.files = dt.files;
+    }
+
+    function render(){
+      preview.innerHTML = '';
+      hint.style.display = files.length ? 'block' : 'none';
+      files.forEach((file, idx) => {
+        const url = URL.createObjectURL(file);
+        const div = document.createElement('div');
+        div.innerHTML =
+          '<div style="position:relative;">' +
+            '<img src="' + url + '" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; border:1px solid var(--line); ' + (idx===0 ? 'outline:2px solid var(--red);' : '') + '">' +
+            (idx===0 ? '<span style="position:absolute; bottom:4px; left:4px; background:var(--red); color:#fff; font-size:9px; font-weight:800; padding:2px 6px; border-radius:2px; text-transform:uppercase;">Корица</span>' : '') +
+            '<button type="button" data-action="remove" data-idx="' + idx + '" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.75); color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:12px; line-height:1;">✕</button>' +
+          '</div>' +
+          '<div style="display:flex; gap:4px; margin-top:6px;">' +
+            (idx!==0 ? '<button type="button" class="btn btn-sm" data-action="cover" data-idx="' + idx + '" style="flex:1; padding:5px; font-size:10px;" title="Направи корица">★</button>' : '') +
+            (idx!==0 ? '<button type="button" class="btn btn-sm" data-action="left" data-idx="' + idx + '" style="padding:5px 8px; font-size:10px;" title="Наляво">←</button>' : '') +
+            (idx!==files.length-1 ? '<button type="button" class="btn btn-sm" data-action="right" data-idx="' + idx + '" style="padding:5px 8px; font-size:10px;" title="Надясно">→</button>' : '') +
+          '</div>';
+        preview.appendChild(div);
+      });
+      syncInput();
+    }
+
+    preview.addEventListener('click', function(e){
+      const btn = e.target.closest('button[data-action]');
+      if(!btn) return;
+      const idx = parseInt(btn.dataset.idx, 10);
+      const action = btn.dataset.action;
+      if(action === 'remove'){
+        files.splice(idx, 1);
+      } else if(action === 'cover'){
+        const item = files.splice(idx, 1)[0];
+        files.unshift(item);
+      } else if(action === 'left' && idx > 0){
+        [files[idx-1], files[idx]] = [files[idx], files[idx-1]];
+      } else if(action === 'right' && idx < files.length - 1){
+        [files[idx+1], files[idx]] = [files[idx], files[idx+1]];
+      }
+      render();
+    });
+  })();
+  </script>
+
+  {% if post and post.images %}
+  <div style="margin-top:34px; padding-top:24px; border-top:1px solid var(--line);">
+    <h3 style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--gray); margin-bottom:16px;">
+      Качени снимки — първата е корицата на обявата
+    </h3>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr)); gap:12px;">
+      {% for img in post.images %}
+      <div style="position:relative;">
+        <img src="{{ url_for('uploaded_file', filename=img.image_path) }}"
+             style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:4px; border:1px solid var(--line); {{ 'outline:2px solid var(--red);' if loop.first }}">
+        {% if loop.first %}
+        <span style="position:absolute; bottom:4px; left:4px; background:var(--red); color:#fff; font-size:9px; font-weight:800; padding:2px 6px; border-radius:2px; text-transform:uppercase;">Корица</span>
+        {% endif %}
+        <form method="POST" action="{{ url_for('admin_gallery_image_delete', post_id=post.id, image_id=img.id) }}"
+              onsubmit="return confirm('Премахване на тази снимка от обявата?');"
+              style="position:absolute; top:4px; right:4px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" style="background:rgba(0,0,0,0.75); color:#fff; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:12px; line-height:1; display:flex; align-items:center; justify-content:center; padding:0; font-family:inherit;">✕</button>
+        </form>
+        <div style="display:flex; gap:4px; margin-top:6px;">
+          {% if not loop.first %}
+          <form method="POST" action="{{ url_for('admin_gallery_image_cover', post_id=post.id, image_id=img.id) }}" style="flex:1;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm" style="width:100%; padding:5px; font-size:10px;" title="Направи корица">★</button>
+          </form>
+          {% endif %}
+          {% if not loop.first %}
+          <form method="POST" action="{{ url_for('admin_gallery_image_move', post_id=post.id, image_id=img.id, direction='left') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm" style="padding:5px 8px; font-size:10px;" title="Премести наляво">←</button>
+          </form>
+          {% endif %}
+          {% if not loop.last %}
+          <form method="POST" action="{{ url_for('admin_gallery_image_move', post_id=post.id, image_id=img.id, direction='right') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm" style="padding:5px 8px; font-size:10px;" title="Премести надясно">→</button>
+          </form>
+          {% endif %}
+          <form method="POST" action="{{ url_for('admin_gallery_image_rotate', post_id=post.id, image_id=img.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm" style="padding:5px 8px; font-size:10px;" title="Завърти на 90°">↻</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

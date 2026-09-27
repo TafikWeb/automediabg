@@ -1,0 +1,35 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+  <h1 style="margin:0;">Отзиви</h1>
+  <a href="{{ url_for('admin_testimonial_new') }}" class="btn btn-primary">+ Нов отзив</a>
+</div>
+
+<div class="card">
+  {% if testimonials %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Автор</th><th>Автомобил</th><th>Текст</th><th>Оценка</th><th>Статус</th><th></th></tr>
+    {% for t in testimonials %}
+    <tr>
+      <td>{{ t.author_name }}</td>
+      <td>{{ t.car_model or '—' }}</td>
+      <td style="max-width:280px; white-space:normal;">{{ t.text[:80] }}{% if t.text|length > 80 %}…{% endif %}</td>
+      <td>{{ '★' * t.rating }}{{ '☆' * (5 - t.rating) }}</td>
+      <td>{% if t.published %}<span class="badge" style="background:rgba(60,180,90,0.15); color:#7fe0a0;">Публикуван</span>{% else %}<span class="badge" style="background:rgba(154,154,160,0.15); color:var(--gray);">Скрит</span>{% endif %}</td>
+      <td><div class="row-actions">
+        <form method="POST" action="{{ url_for('admin_testimonial_move', testimonial_id=t.id, direction='up') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">↑</button></form>
+        <form method="POST" action="{{ url_for('admin_testimonial_move', testimonial_id=t.id, direction='down') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">↓</button></form>
+        <a class="btn btn-sm" href="{{ url_for('admin_testimonial_edit', testimonial_id=t.id) }}">Редакция</a>
+        <form method="POST" action="{{ url_for('admin_testimonial_toggle', testimonial_id=t.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm" type="submit">{{ 'Скрий' if t.published else 'Публикувай' }}</button></form>
+        <form method="POST" action="{{ url_for('admin_testimonial_delete', testimonial_id=t.id) }}" onsubmit="return confirm('Изтриване на отзива?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Изтрий</button></form>
+      </div></td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">Все още няма отзиви.</div>
+  {% endif %}
+</div>
+{% endblock %}
