@@ -35,7 +35,7 @@ ASSET_VERSION = str(int(time.time()))
 # Смени това число при всяко ново обновяване, което ти пращам — виж го в
 # долния край на менюто в админ панела, за да провериш дали Railway реално
 # е хванал последния deploy.
-SITE_VERSION = "2.0"
+SITE_VERSION = "2.1"
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-env")
 
 # DATA_DIR трябва да сочи към постоянно място (Railway Volume), иначе базата
@@ -113,6 +113,23 @@ def contains_spam_link(text):
 @app.context_processor
 def inject_asset_version():
     return {"asset_version": ASSET_VERSION, "site_version": SITE_VERSION}
+
+
+def uploaded_file_url(filename):
+    """Като url_for('uploaded_file', ...), но добавя ?t=<последна промяна>
+    към адреса — така браузърът винаги презарежда снимката, ако файлът се е
+    сменил (напр. завъртане), вместо да показва стар кеширан вариант."""
+    if not filename:
+        return ""
+    full_path = os.path.join(UPLOAD_DIR, filename)
+    try:
+        mtime = int(os.path.getmtime(full_path))
+    except OSError:
+        mtime = 0
+    return url_for("uploaded_file", filename=filename) + f"?t={mtime}"
+
+
+app.jinja_env.globals["uploaded_file_url"] = uploaded_file_url
 
 
 def format_bullets(text):
