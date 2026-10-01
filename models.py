@@ -51,6 +51,24 @@ class CarBrand(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+product_carmodel_link = db.Table(
+    "product_carmodel_link",
+    db.Column("product_id", db.Integer, db.ForeignKey("product.id")),
+    db.Column("car_model_id", db.Integer, db.ForeignKey("car_model.id")),
+)
+
+
+class CarModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)  # показвано име, напр. "VW Golf 5 (2003-2009)"
+    aliases = db.Column(db.Text, default="")  # по един вариант на ред: Golf 5 / Golf V / Голф 5 / Golf5 ...
+    brand_id = db.Column(db.Integer, db.ForeignKey("car_brand.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    brand = db.relationship("CarBrand")
+    products = db.relationship("Product", secondary=product_carmodel_link, backref="car_models")
+
+
 class GalleryItem(db.Model):
     """Старият модел с по 1 снимка на запис — запазен само за автоматична
     еднократна миграция към GalleryPost/GalleryImage при първо стартиране."""

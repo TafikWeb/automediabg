@@ -55,7 +55,7 @@
   <nav class="wrap">
     <a href="#" class="logo">
       {% if logo_exists %}
-        <img src="{{ url_for('uploaded_file', filename='logo/logo.png') }}" alt="AutoMediaBG" style="height:{{ logo_height or 40 }}px; width:auto;">
+        <img src="{{ uploaded_file_url('logo/logo.png') }}" alt="AutoMediaBG" style="height:{{ logo_height or 40 }}px; width:auto;">
         {% if logo_text %}<span class="logo-side-text">{{ logo_text }}</span>{% endif %}
       {% else %}
         AUTO<span>MEDIA</span>BG
@@ -110,6 +110,9 @@
       <div class="hero-actions">
         <a href="#zayavka" class="btn btn-primary">{{ T.hero_cta_request }}</a>
         <a href="#montirani" class="btn btn-ghost">{{ T.hero_cta_view }}</a>
+        {% if car_models %}
+        <button type="button" class="btn btn-ghost" onclick="openCompatModal()">🔧 {{ T.compat_finder_cta }}</button>
+        {% endif %}
       </div>
       <div class="hero-stats">
         <div><b>{{ T.hero_stat1_val }}</b><span>{{ T.hero_stat1_label }}</span></div>
@@ -185,7 +188,7 @@
       {% for post in gallery_posts %}
       <div class="gallery-item" data-cat="{{ post.brand_id or '' }}" onclick="openGalleryPost({{ post.id }})">
         {% if post.images %}
-          <img id="galleryThumb-{{ post.id }}" src="{{ url_for('uploaded_file', filename=post.images[0].image_path) }}" alt="{{ post.tag }}" loading="lazy">
+          <img id="galleryThumb-{{ post.id }}" src="{{ uploaded_file_url(post.images[0].image_path) }}" alt="{{ post.tag }}" loading="lazy">
         {% endif %}
         {% if post.images|length > 1 %}
         <button class="product-thumb-nav prev" onclick="event.stopPropagation(); cycleGalleryCardImage({{ post.id }}, -1)" aria-label="{{ T.prev_photo }}">&#8249;</button>
@@ -243,7 +246,7 @@
             {% else %}{{ T.stock_in }}{% endif %}
           </span>
           {% if cover %}
-            <img id="cardThumb-{{ p.id }}" src="{{ url_for('uploaded_file', filename=cover) }}" alt="{{ p.name }}{% if p.compatible_cars %} — {{ T.compat_alt_prefix }} {{ p.compatible_cars | format_compat_cars }}{% endif %}" loading="lazy">
+            <img id="cardThumb-{{ p.id }}" src="{{ uploaded_file_url(cover) }}" alt="{{ p.name }}{% if p.compatible_cars %} — {{ T.compat_alt_prefix }} {{ p.compatible_cars | format_compat_cars }}{% endif %}" loading="lazy">
           {% else %}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
           {% endif %}
@@ -303,9 +306,9 @@
         {% if t.media_path %}
         <div class="testimonial-media">
           {% if t.media_type == 'video' %}
-          <video src="{{ url_for('uploaded_file', filename=t.media_path) }}" controls muted playsinline preload="metadata"></video>
+          <video src="{{ uploaded_file_url(t.media_path) }}" controls muted playsinline preload="metadata"></video>
           {% else %}
-          <img src="{{ url_for('uploaded_file', filename=t.media_path) }}" alt="{{ t.author_name }}" loading="lazy">
+          <img src="{{ uploaded_file_url(t.media_path) }}" alt="{{ t.author_name }}" loading="lazy">
           {% endif %}
         </div>
         {% endif %}
@@ -648,6 +651,23 @@
   });
 </script>
 
+{% if car_models %}
+<div class="product-modal-overlay" id="compatModalOverlay" onclick="if(event.target === this) closeCompatModal()">
+  <div class="product-modal compat-modal">
+    <button class="modal-close" onclick="closeCompatModal()">&times;</button>
+    <div class="compat-modal-body">
+      <h3>{{ T.compat_finder_title }}</h3>
+      <p class="compat-modal-subtitle">{{ T.compat_finder_subtitle }}</p>
+      <div class="products-search compat-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="compatSearchInput" placeholder="{{ T.compat_search_placeholder }}" oninput="runCompatSearch()" autocomplete="off">
+      </div>
+      <div id="compatResults" class="compat-results"></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <div class="product-modal-overlay" id="productModalOverlay" onclick="if(event.target === this) closeProductModal()">
   <div class="product-modal">
     <button class="modal-close" onclick="closeProductModal()">&times;</button>
@@ -702,6 +722,9 @@
     stockIn: {{ T.stock_in | tojson }},
     stockOrder: {{ T.stock_order | tojson }},
     stockOut: {{ T.stock_out | tojson }},
+    compatNoMatch: {{ T.compat_no_match | tojson }},
+    compatNoProducts: {{ T.compat_no_products | tojson }},
+    compatRequestBtn: {{ T.product_request | tojson }},
   };
 
   function selectProductForLead(id, name){
@@ -766,6 +789,77 @@
     document.getElementById('zayavka').scrollIntoView({behavior:'smooth'});
   }
 
+  function normalizeCompatText(s){
+    return (s || '').toLowerCase().replace(/[\s\-_.,]/g, '');
+  }
+
+  function openCompatModal(){
+    const overlay = document.getElementById('compatModalOverlay');
+    if(!overlay) return;
+    overlay.classList.add('visible');
+    requestAnimationFrame(()=> overlay.classList.add('open'));
+    document.body.style.overflow = 'hidden';
+    const input = document.getElementById('compatSearchInput');
+    document.getElementById('compatResults').innerHTML = '';
+    input.value = '';
+    setTimeout(()=> input.focus(), 250);
+  }
+
+  function closeCompatModal(){
+    const overlay = document.getElementById('compatModalOverlay');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(()=> overlay.classList.remove('visible'), 200);
+  }
+
+  function runCompatSearch(){
+    const raw = document.getElementById('compatSearchInput').value.trim();
+    const resultsEl = document.getElementById('compatResults');
+    if(!raw){
+      resultsEl.innerHTML = '';
+      return;
+    }
+    const query = normalizeCompatText(raw);
+    const matches = CAR_MODELS_DATA.filter(model =>
+      model.aliases.some(alias => {
+        const na = normalizeCompatText(alias);
+        return na.includes(query) || query.includes(na);
+      })
+    );
+
+    if(matches.length === 0){
+      resultsEl.innerHTML = '<p class="compat-no-match">' + I18N.compatNoMatch + '</p>';
+      return;
+    }
+
+    resultsEl.innerHTML = matches.map(model => {
+      const rows = model.productIds.map(pid => {
+        const p = PRODUCTS_DATA[pid];
+        if(!p) return '';
+        const thumb = (p.images && p.images[0]) ? p.images[0] : '';
+        return '<div class="compat-product-row">' +
+          (thumb ? '<img class="compat-product-thumb" src="' + thumb + '" alt="">' : '') +
+          '<div class="compat-product-info"><b>' + p.name + '</b>' + (p.price ? '<span>' + p.price + '</span>' : '') + '</div>' +
+          '<button type="button" class="compat-product-btn" data-pid="' + pid + '">' + I18N.compatRequestBtn + '</button>' +
+        '</div>';
+      }).join('');
+      return '<div class="compat-model-group"><div class="compat-model-name">🚗 ' + model.name + '</div>' +
+        (rows || '<p class="compat-no-match" style="padding:4px 0;">' + I18N.compatNoProducts + '</p>') +
+      '</div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('.compat-product-btn');
+    if(!btn) return;
+    const pid = parseInt(btn.dataset.pid, 10);
+    const data = PRODUCTS_DATA[pid];
+    if(data){
+      closeCompatModal();
+      setTimeout(()=> selectProductForLead(pid, data.name), 200);
+    }
+  });
+
   function addSwipeSupport(el, onSwipeLeft, onSwipeRight){
     let startX = 0, startY = 0, tracking = false;
     el.addEventListener('touchstart', (e)=>{
@@ -814,6 +908,7 @@
 
   const GALLERY_DATA = {{ gallery_json | safe }};
   const SERVICES_DATA = {{ services_json | safe }};
+  const CAR_MODELS_DATA = {{ car_models_json | safe }};
   const galleryCardIndexes = {};
 
   function cycleGalleryCardImage(id, dir){

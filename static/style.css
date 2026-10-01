@@ -174,6 +174,29 @@ section{padding:100px 0;}
   box-shadow:0 40px 80px -20px rgba(0,0,0,0.7);
 }
 .product-modal-overlay.open .product-modal{transform:scale(1) translateY(0);}
+
+.compat-modal{max-width:560px;}
+.compat-modal-body{padding:36px 30px;}
+.compat-modal-body h3{font-size:20px; margin-bottom:6px;}
+.compat-modal-subtitle{color:var(--gray); font-size:13px; margin-bottom:22px;}
+.compat-search{max-width:none; margin-bottom:8px;}
+.compat-results{margin-top:18px; display:flex; flex-direction:column; gap:14px; max-height:50vh; overflow-y:auto;}
+.compat-no-match{color:var(--gray); font-size:13px; padding:18px 0;}
+.compat-model-group{border:1px solid var(--line); border-radius:8px; padding:16px;}
+.compat-model-name{font-family:'Archivo Black'; font-size:14px; margin-bottom:10px; color:var(--red);}
+.compat-product-row{
+  display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid var(--line);
+}
+.compat-product-row:first-of-type{border-top:none; padding-top:0;}
+.compat-product-thumb{width:52px; height:52px; border-radius:4px; object-fit:cover; flex-shrink:0; background:var(--surface-2);}
+.compat-product-info{flex:1; min-width:0;}
+.compat-product-info b{display:block; font-size:13px; margin-bottom:2px;}
+.compat-product-info span{display:block; color:var(--gray); font-size:12px;}
+.compat-product-price{font-family:'Archivo Black'; font-size:13px; color:var(--white); white-space:nowrap;}
+.compat-product-btn{
+  font-size:11px; font-weight:800; color:var(--red); text-transform:uppercase; background:none; border:none;
+  cursor:pointer; white-space:nowrap; letter-spacing:0.5px;
+}
 .modal-close{
   position:absolute; top:14px; right:14px; z-index:5; width:36px; height:36px; border-radius:50%;
   background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15); color:#fff; font-size:20px; line-height:1;

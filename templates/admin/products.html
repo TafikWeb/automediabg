@@ -12,7 +12,7 @@
     {% for p in products %}
     {% set cover = p.images[0].image_path if p.images else p.image_path %}
     <tr>
-      <td>{% if cover %}<img class="thumb" src="{{ url_for('uploaded_file', filename=cover) }}">{% endif %}</td>
+      <td>{% if cover %}<img class="thumb" src="{{ uploaded_file_url(cover) }}">{% endif %}</td>
       <td>{% if p.is_bestseller %}🔥 {% endif %}{{ p.name }}</td>
       <td>{{ p.sku or '—' }}</td>
       <td>{{ p.price }}</td>

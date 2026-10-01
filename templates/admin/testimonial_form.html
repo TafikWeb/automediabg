@@ -5,9 +5,9 @@
   {% if testimonial and testimonial.media_path %}
   <div style="margin-bottom:20px;">
     {% if testimonial.media_type == 'video' %}
-    <video src="{{ url_for('uploaded_file', filename=testimonial.media_path) }}" controls style="width:100%; max-width:280px; border-radius:6px; border:1px solid var(--line);"></video>
+    <video src="{{ uploaded_file_url(testimonial.media_path) }}" controls style="width:100%; max-width:280px; border-radius:6px; border:1px solid var(--line);"></video>
     {% else %}
-    <img src="{{ url_for('uploaded_file', filename=testimonial.media_path) }}" style="width:100%; max-width:280px; border-radius:6px; border:1px solid var(--line);">
+    <img src="{{ uploaded_file_url(testimonial.media_path) }}" style="width:100%; max-width:280px; border-radius:6px; border:1px solid var(--line);">
     {% endif %}
     <div style="display:flex; gap:8px; margin-top:10px;">
       {% if testimonial.media_type != 'video' %}

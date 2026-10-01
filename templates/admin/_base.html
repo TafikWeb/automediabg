@@ -69,6 +69,7 @@
     <a href="{{ url_for('admin_interests') }}" class="{{ 'active' if request.endpoint in ['admin_interests','admin_interest_new','admin_interest_edit'] }}">Варианти в заявката</a>
     <a href="{{ url_for('admin_gallery') }}" class="{{ 'active' if request.endpoint in ['admin_gallery','admin_gallery_new','admin_gallery_edit'] }}">Галерия</a>
     <a href="{{ url_for('admin_brands') }}" class="{{ 'active' if request.endpoint=='admin_brands' }}">Марки</a>
+    <a href="{{ url_for('admin_car_models') }}" class="{{ 'active' if request.endpoint in ['admin_car_models','admin_car_model_new','admin_car_model_edit'] }}">Модели (Съвместимост)</a>
     <a href="{{ url_for('admin_logo') }}" class="{{ 'active' if request.endpoint=='admin_logo' }}">Лого</a>
     <a href="{{ url_for('admin_testimonials') }}" class="{{ 'active' if request.endpoint in ['admin_testimonials','admin_testimonial_new','admin_testimonial_edit'] }}">Отзиви</a>
     <a href="{{ url_for('admin_faq') }}" class="{{ 'active' if request.endpoint in ['admin_faq','admin_faq_new','admin_faq_edit'] }}">Въпроси/FAQ</a>

@@ -1,0 +1,35 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+  <h1 style="margin:0;">Модели коли — за "Съвместимост"</h1>
+  <a href="{{ url_for('admin_car_model_new') }}" class="btn btn-primary">+ Нов модел</a>
+</div>
+<p style="color:var(--gray); font-size:13px; margin:-14px 0 24px; max-width:640px;">
+  Това захранва бутона "Съвместимост" на сайта — клиентът пише колата си (напр. "Голф 5", "Golf V", "Golf5"),
+  системата го разпознава по вариантите, които зададеш тук, и показва точно продуктите, които си маркирал като подходящи.
+</p>
+
+<div class="card">
+  {% if models %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Модел</th><th>Марка</th><th>Варианти за търсене</th><th>Продукти</th><th></th></tr>
+    {% for m in models %}
+    <tr>
+      <td>{{ m.name }}</td>
+      <td>{{ m.brand.name if m.brand else '—' }}</td>
+      <td style="max-width:260px; white-space:normal; color:var(--gray); font-size:12px;">{{ m.aliases.replace('\n', ', ') }}</td>
+      <td>{{ m.products|length }}</td>
+      <td><div class="row-actions">
+        <a class="btn btn-sm" href="{{ url_for('admin_car_model_edit', model_id=m.id) }}">Редакция</a>
+        <form method="POST" action="{{ url_for('admin_car_model_delete', model_id=m.id) }}" onsubmit="return confirm('Изтриване на модела?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Изтрий</button></form>
+      </div></td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">Все още няма добавени модели.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "admin/_base.html" %}
+{% block content %}
+<h1>{{ 'Редакция на модел' if model else 'Нов модел' }}</h1>
+<div class="card" style="max-width:560px;">
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Име на модела (показва се на клиента)</label>
+    <input type="text" name="name" value="{{ model.name if model else '' }}" placeholder="напр. VW Golf 5 (2003-2009)" required>
+
+    <label>Марка (по избор — за филтрите по марка)</label>
+    <select name="brand_id">
+      <option value="">— без марка —</option>
+      {% for brand in all_brands %}
+      <option value="{{ brand.id }}" {{ 'selected' if model and model.brand_id == brand.id }}>{{ brand.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Варианти за търсене (по един на ред — всичко, с което клиент може да го напише)</label>
+    <textarea name="aliases" rows="6" placeholder="Golf 5&#10;Golf V&#10;Голф 5&#10;Golf5&#10;Голф5&#10;Golf 5 2005">{{ model.aliases if model else '' }}</textarea>
+    <p style="color:var(--gray); font-size:11px; margin:-10px 0 20px;">
+      Добави колкото се сетиш варианта — грешно изписани, с латиница/кирилица, с/без година. Колкото повече, толкова по-лесно клиентът ще открие колата си.
+    </p>
+
+    <label>Кои продукти пасват на този модел?</label>
+    <div style="display:flex; flex-direction:column; gap:6px; max-height:320px; overflow-y:auto; border:1px solid var(--line); border-radius:4px; padding:12px; margin-bottom:20px;">
+      {% for p in all_products %}
+      <label style="display:flex; align-items:center; gap:8px; font-weight:400; cursor:pointer;">
+        <input type="checkbox" name="product_ids" value="{{ p.id }}" style="width:auto;" {{ 'checked' if model and p in model.products }}>
+        {{ p.name }}{% if p.sku %} <span style="color:var(--gray); font-size:11px;">({{ p.sku }})</span>{% endif %}
+      </label>
+      {% endfor %}
+      {% if not all_products %}
+      <span style="color:var(--gray); font-size:12px;">Няма добавени продукти — добави ги първо от "Продукти".</span>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Запази</button>
+    <a href="{{ url_for('admin_car_models') }}" class="btn">Отказ</a>
+  </form>
+</div>
+{% endblock %}

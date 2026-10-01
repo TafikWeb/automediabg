@@ -11,7 +11,7 @@
     <tr><th></th><th>Надпис</th><th>Марка</th><th>Снимки</th><th>Статус</th><th>Действия</th></tr>
     {% for post in posts %}
     <tr>
-      <td>{% if post.images %}<img class="thumb" src="{{ url_for('uploaded_file', filename=post.images[0].image_path) }}">{% endif %}</td>
+      <td>{% if post.images %}<img class="thumb" src="{{ uploaded_file_url(post.images[0].image_path) }}">{% endif %}</td>
       <td>{{ post.tag or '—' }}</td>
       <td>{{ post.brand.name if post.brand else '—' }}</td>
       <td>{{ post.images|length }}</td>

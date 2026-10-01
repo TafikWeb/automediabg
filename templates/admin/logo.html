@@ -4,7 +4,7 @@
 <div class="card" style="max-width:480px;">
   {% if logo_exists %}
     <div style="background:#0a0a0b; border:1px solid var(--line); border-radius:8px; padding:20px; margin-bottom:20px; display:flex; align-items:center; gap:8px;">
-      <img src="{{ url_for('uploaded_file', filename='logo/logo.png') }}" style="height:{{ logo_height or 40 }}px; width:auto;">
+      <img src="{{ uploaded_file_url('logo/logo.png') }}" style="height:{{ logo_height or 40 }}px; width:auto;">
       {% if logo_text %}<span style="font-family:'Archivo Black'; font-size:18px; color:#fff;">{{ logo_text }}</span>{% endif %}
     </div>
     <p style="color:var(--gray); font-size:11px; margin:-14px 0 20px;">Точно така изглежда логото в менюто на сайта в момента.</p>

@@ -12,13 +12,13 @@ from flask import (Flask, abort, flash, redirect, render_template, request,
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf import CSRFProtect
-from PIL import Image
+from PIL import Image, ImageOps
 from werkzeug.utils import secure_filename
 
 load_dotenv()
 
-from models import (BotFeature, CarBrand, FAQ, GalleryImage, GalleryItem,
-                     GalleryPost, InterestOption, Lead, Partner,
+from models import (BotFeature, CarBrand, CarModel, FAQ, GalleryImage,
+                     GalleryItem, GalleryPost, InterestOption, Lead, Partner,
                      PartnerPayoutRequest, PartnerReferral, PaymentMethod,
                      Product, ProductImage, Service, SiteSetting, SocialLink,
                      Testimonial, TelegramMember, db, detect_currency,
@@ -35,7 +35,7 @@ ASSET_VERSION = str(int(time.time()))
 # Смени това число при всяко ново обновяване, което ти пращам — виж го в
 # долния край на менюто в админ панела, за да провериш дали Railway реално
 # е хванал последния deploy.
-SITE_VERSION = "2.1"
+SITE_VERSION = "2.3"
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-env")
 
 # DATA_DIR трябва да сочи към постоянно място (Railway Volume), иначе базата
@@ -246,6 +246,7 @@ def save_upload(file_storage, subfolder):
     try:
         img = Image.open(file_storage)
         img_format = (img.format or "JPEG").upper()
+        img = ImageOps.exif_transpose(img)  # коригира завъртане от телефонни снимки при самото качване
 
         if subfolder == "logo":
             # Пази прозрачност и оригинален формат — само смалява, ако е огромен файл.
@@ -287,14 +288,22 @@ def save_upload(file_storage, subfolder):
 def rotate_image_file(full_path):
     """Завърта реалния файл на диска на 90° по часовниковата стрелка —
     поправя се навсякъде на сайта (карти, prozorec, галерия) с една стъпка,
-    без да зависи от CSS. Тихо не прави нищо, ако файлът липсва/не е снимка."""
+    без да зависи от CSS. Тихо не прави нищо, ако файлът липсва/не е снимка.
+
+    Първо "изпича" евентуалната EXIF ориентация на снимката (телефоните често
+    пазят завъртането като метаданни, не като реално завъртени пиксели) —
+    иначе резултатът изглежда объркан или все едно нищо не се е случило."""
     if not os.path.exists(full_path):
         return False
     try:
         img = Image.open(full_path)
         img_format = (img.format or "JPEG").upper()
+        img = ImageOps.exif_transpose(img)  # прилага съществуващата EXIF ориентация върху пикселите
         rotated = img.transpose(Image.ROTATE_270)  # 270° обратно на часовника = 90° по часовника
-        rotated.save(full_path, format=img_format)
+        save_kwargs = {"format": img_format}
+        if img_format == "JPEG":
+            save_kwargs["quality"] = 90
+        rotated.save(full_path, **save_kwargs)  # без EXIF — вече е "изпечено" в пикселите, не остава стар таг
         return True
     except Exception as exc:
         app.logger.warning("Завъртането на снимката пропадна: %s", exc)
@@ -528,6 +537,7 @@ def render_index(lang):
     testimonials = Testimonial.query.filter_by(published=True).order_by(Testimonial.sort_order, Testimonial.created_at.desc()).all()
     faqs = FAQ.query.filter_by(published=True).order_by(FAQ.sort_order, FAQ.created_at.desc()).all()
     services = Service.query.filter_by(published=True).order_by(Service.sort_order, Service.created_at).all()
+    car_models = CarModel.query.order_by(CarModel.name).all()
     interest_options = InterestOption.query.filter_by(published=True).order_by(InterestOption.sort_order, InterestOption.created_at).all()
     gallery_brands = sorted({post.brand for post in gallery_posts if post.brand}, key=lambda b: b.name)
     product_brands = sorted({b for p in products for b in p.brands}, key=lambda b: b.name)
@@ -568,6 +578,17 @@ def render_index(lang):
 
     services_data = {s.id: {"title": s.title} for s in services}
 
+    car_models_data = []
+    for m in car_models:
+        aliases = [a.strip() for a in m.aliases.split("\n") if a.strip()]
+        aliases.append(m.name)  # самото име винаги важи като вариант за търсене
+        car_models_data.append({
+            "id": m.id,
+            "name": m.name,
+            "aliases": aliases,
+            "productIds": [p.id for p in m.products if p.published],
+        })
+
     social = {s.key: s.url for s in SocialLink.query.all()}
     discount_feature = BotFeature.query.filter_by(key="discount").first()
     discount_enabled = discount_feature.enabled if discount_feature else True
@@ -589,6 +610,8 @@ def render_index(lang):
         gallery_json=json.dumps(gallery_data, ensure_ascii=False),
         services=services,
         services_json=json.dumps(services_data, ensure_ascii=False),
+        car_models=car_models,
+        car_models_json=json.dumps(car_models_data, ensure_ascii=False),
         social=social,
         ga_id=os.environ.get("GOOGLE_ANALYTICS_ID", "").strip(),
         form_ts=int(time.time()),
@@ -1426,6 +1449,73 @@ def admin_interest_move(option_id, direction):
             items[idx].sort_order, items[swap_with].sort_order = swap_with, idx
             db.session.commit()
     return redirect(url_for("admin_interests"))
+
+
+# ---------- Admin: Модели коли (за търсачката "Съвместимост") ----------
+
+@app.route("/admin/car-models")
+@login_required
+def admin_car_models():
+    models = CarModel.query.order_by(CarModel.name).all()
+    return render_template("admin/car_models.html", models=models)
+
+
+@app.route("/admin/car-models/new", methods=["GET", "POST"])
+@login_required
+def admin_car_model_new():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        if not name:
+            flash("Въведи име на модела.")
+            return redirect(url_for("admin_car_model_new"))
+        brand_id = request.form.get("brand_id", "").strip()
+        model = CarModel(
+            name=name,
+            aliases=request.form.get("aliases", "").strip(),
+            brand_id=int(brand_id) if brand_id.isdigit() else None,
+        )
+        product_ids = [int(pid) for pid in request.form.getlist("product_ids") if pid.isdigit()]
+        model.products = Product.query.filter(Product.id.in_(product_ids)).all()
+        db.session.add(model)
+        db.session.commit()
+        flash("Моделът е добавен.")
+        return redirect(url_for("admin_car_models"))
+    return render_template(
+        "admin/car_model_form.html", model=None,
+        all_brands=CarBrand.query.order_by(CarBrand.name).all(),
+        all_products=Product.query.order_by(Product.name).all(),
+    )
+
+
+@app.route("/admin/car-models/<int:model_id>/edit", methods=["GET", "POST"])
+@login_required
+def admin_car_model_edit(model_id):
+    model = CarModel.query.get_or_404(model_id)
+    if request.method == "POST":
+        model.name = request.form.get("name", "").strip()
+        model.aliases = request.form.get("aliases", "").strip()
+        brand_id = request.form.get("brand_id", "").strip()
+        model.brand_id = int(brand_id) if brand_id.isdigit() else None
+        product_ids = [int(pid) for pid in request.form.getlist("product_ids") if pid.isdigit()]
+        model.products = Product.query.filter(Product.id.in_(product_ids)).all()
+        db.session.commit()
+        flash("Моделът е обновен.")
+        return redirect(url_for("admin_car_models"))
+    return render_template(
+        "admin/car_model_form.html", model=model,
+        all_brands=CarBrand.query.order_by(CarBrand.name).all(),
+        all_products=Product.query.order_by(Product.name).all(),
+    )
+
+
+@app.route("/admin/car-models/<int:model_id>/delete", methods=["POST"])
+@login_required
+def admin_car_model_delete(model_id):
+    model = CarModel.query.get_or_404(model_id)
+    db.session.delete(model)
+    db.session.commit()
+    flash("Моделът е изтрит.")
+    return redirect(url_for("admin_car_models"))
 
 
 # ---------- Admin: Услуги ----------
