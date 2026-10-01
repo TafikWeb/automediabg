@@ -837,7 +837,7 @@
         const p = PRODUCTS_DATA[pid];
         if(!p) return '';
         const thumb = (p.images && p.images[0]) ? p.images[0] : '';
-        return '<div class="compat-product-row">' +
+        return '<div class="compat-product-row" data-open-pid="' + pid + '">' +
           (thumb ? '<img class="compat-product-thumb" src="' + thumb + '" alt="">' : '') +
           '<div class="compat-product-info"><b>' + p.name + '</b>' + (p.price ? '<span>' + p.price + '</span>' : '') + '</div>' +
           '<button type="button" class="compat-product-btn" data-pid="' + pid + '">' + I18N.compatRequestBtn + '</button>' +
@@ -851,12 +851,23 @@
 
   document.addEventListener('click', function(e){
     const btn = e.target.closest('.compat-product-btn');
-    if(!btn) return;
-    const pid = parseInt(btn.dataset.pid, 10);
-    const data = PRODUCTS_DATA[pid];
-    if(data){
-      closeCompatModal();
-      setTimeout(()=> selectProductForLead(pid, data.name), 200);
+    if(btn){
+      e.stopPropagation();
+      const pid = parseInt(btn.dataset.pid, 10);
+      const data = PRODUCTS_DATA[pid];
+      if(data){
+        closeCompatModal();
+        setTimeout(()=> selectProductForLead(pid, data.name), 200);
+      }
+      return;
+    }
+    const row = e.target.closest('.compat-product-row');
+    if(row){
+      const pid = parseInt(row.dataset.openPid, 10);
+      if(PRODUCTS_DATA[pid]){
+        closeCompatModal();
+        setTimeout(()=> openProduct(pid), 200);
+      }
     }
   });
 

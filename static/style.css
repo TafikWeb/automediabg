@@ -185,8 +185,10 @@ section{padding:100px 0;}
 .compat-model-group{border:1px solid var(--line); border-radius:8px; padding:16px;}
 .compat-model-name{font-family:'Archivo Black'; font-size:14px; margin-bottom:10px; color:var(--red);}
 .compat-product-row{
-  display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid var(--line);
+  display:flex; align-items:center; gap:12px; padding:10px 6px; border-top:1px solid var(--line);
+  cursor:pointer; border-radius:4px; margin:0 -6px; transition:background .15s;
 }
+.compat-product-row:hover{background:var(--surface-2);}
 .compat-product-row:first-of-type{border-top:none; padding-top:0;}
 .compat-product-thumb{width:52px; height:52px; border-radius:4px; object-fit:cover; flex-shrink:0; background:var(--surface-2);}
 .compat-product-info{flex:1; min-width:0;}
