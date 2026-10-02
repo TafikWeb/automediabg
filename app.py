@@ -35,7 +35,7 @@ ASSET_VERSION = str(int(time.time()))
 # Смени това число при всяко ново обновяване, което ти пращам — виж го в
 # долния край на менюто в админ панела, за да провериш дали Railway реално
 # е хванал последния deploy.
-SITE_VERSION = "2.6"
+SITE_VERSION = "2.7"
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-env")
 
 # DATA_DIR трябва да сочи към постоянно място (Railway Volume), иначе базата
@@ -143,6 +143,25 @@ def format_bullets(text):
 
 
 app.jinja_env.filters["format_bullets"] = format_bullets
+
+
+def truncate_naturally(text, limit=260):
+    """Съкращава текст без да реже по средата на дума или точка (•) —
+    предпочита да спре на завършена точка, иначе на край на дума."""
+    if not text:
+        return ""
+    text = text.strip()
+    if len(text) <= limit:
+        return text
+    window = text[:limit]
+    for sep in ("•", "\n"):
+        idx = window.rfind(sep)
+        if idx > limit * 0.35:
+            return text[:idx].rstrip(" \n•").rstrip() + "…"
+    idx = window.rfind(" ")
+    if idx > limit * 0.35:
+        return text[:idx].rstrip() + "…"
+    return window.rstrip() + "…"
 
 
 def format_compat_cars(text):
@@ -592,11 +611,7 @@ def render_index(lang):
 
     gallery_data = {}
     for post in gallery_posts:
-        product_desc = ""
-        if post.product and post.product.description:
-            product_desc = post.product.description.strip()
-            if len(product_desc) > 160:
-                product_desc = product_desc[:160].rsplit(" ", 1)[0] + "…"
+        product_desc = truncate_naturally(post.product.description) if post.product else ""
         gallery_data[post.id] = {
             "tag": post.tag,
             "brand": post.brand.name if post.brand else "",

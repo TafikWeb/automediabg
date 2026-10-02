@@ -53,22 +53,12 @@
       Подреди преди да запазиш — първата снимка ще е корицата.
     </p>
 
-    {% if post and post.video_path %}
-    <label>Текущо видео</label>
-    <video src="{{ uploaded_file_url(post.video_path) }}" controls style="width:100%; max-width:280px; border-radius:6px; border:1px solid var(--line); margin-bottom:10px;"></video>
-    {% endif %}
     <label>{{ 'Смени видео (по избор)' if post and post.video_path else 'Качи кратко видео от монтажа (по избор, до ~30 сек)' }}</label>
     <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime">
     <p style="color:var(--gray); font-size:11px; margin:-10px 0 16px;">mp4/webm/mov, до 25MB.</p>
 
     <label>Или линк към клипче в TikTok/Instagram (ако не искаш да качваш файл директно)</label>
     <input type="url" name="video_url" value="{{ post.video_url if post else '' }}" placeholder="https://www.tiktok.com/@.../video/...">
-    {% if post and post.video_path %}
-    <form method="POST" action="{{ url_for('admin_gallery_remove_video', post_id=post.id) }}" onsubmit="return confirm('Премахване на видеото?');" style="margin-top:-10px; margin-bottom:20px;">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="btn btn-sm btn-danger">Премахни видеото</button>
-    </form>
-    {% endif %}
 
     <button type="submit" class="btn btn-primary">Запази</button>
     <a href="{{ url_for('admin_gallery') }}" class="btn">Отказ</a>
@@ -133,6 +123,22 @@
     });
   })();
   </script>
+
+  {% if post and post.video_path %}
+  <div style="margin-top:34px; padding-top:24px; border-top:1px solid var(--line);">
+    <h3 style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--gray); margin-bottom:16px;">
+      Текущо видео
+    </h3>
+    <div style="position:relative; max-width:220px;">
+      <video src="{{ uploaded_file_url(post.video_path) }}" controls style="width:100%; border-radius:6px; border:1px solid var(--line); display:block;"></video>
+      <form method="POST" action="{{ url_for('admin_gallery_remove_video', post_id=post.id) }}"
+            onsubmit="return confirm('Премахване на видеото?');"
+            style="position:absolute; top:6px; right:6px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" title="Премахни видеото" style="background:rgba(0,0,0,0.75); color:#fff; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center; padding:0; font-family:inherit;">✕</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
 
   {% if post and post.images %}
   <div style="margin-top:34px; padding-top:24px; border-top:1px solid var(--line);">

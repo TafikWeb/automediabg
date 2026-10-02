@@ -102,6 +102,13 @@ section{padding:100px 0;}
 .gallery-tabs{display:flex; gap:10px; margin-bottom:36px; flex-wrap:wrap;}
 
 .products-toolbar{display:flex; flex-direction:column; gap:18px; margin-bottom:20px;}
+.gallery-toolbar{flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between;}
+.gallery-toolbar .gallery-tabs{margin-bottom:0;}
+.gallery-toolbar .products-search{max-width:280px; flex:1; min-width:200px;}
+@media (max-width:640px){
+  .gallery-toolbar{flex-direction:column; align-items:stretch;}
+  .gallery-toolbar .products-search{max-width:none;}
+}
 .products-search{
   position:relative; max-width:360px;
 }
@@ -133,7 +140,13 @@ section{padding:100px 0;}
 .gallery-item{position:relative; aspect-ratio:4/3; border-radius:6px; overflow:hidden; border:1px solid var(--line); background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--line); cursor:pointer;}
 .gallery-item img{width:100%; height:100%; object-fit:cover;}
 .gallery-item svg{width:40px; height:40px; opacity:0.5;}
-.gallery-item .tag{position:absolute; bottom:12px; left:12px; font-size:11px; background:rgba(0,0,0,0.6); padding:6px 10px; border-radius:3px; color:var(--white); font-weight:600; backdrop-filter:blur(4px);}
+.gallery-item .tag{position:absolute; bottom:12px; left:12px; font-size:11px; background:rgba(0,0,0,0.6); padding:6px 10px; border-radius:3px; color:var(--white); font-weight:600; backdrop-filter:blur(4px); max-width:calc(100% - 24px);}
+.gallery-model-badge{
+  position:absolute; top:12px; left:12px; z-index:2; background:rgba(0,0,0,0.65); color:#fff; font-size:11px;
+  font-weight:700; padding:5px 10px; border-radius:3px; backdrop-filter:blur(4px);
+}
+.gallery-tag-structured{display:flex; align-items:center; gap:2px; flex-wrap:wrap;}
+.gallery-sku-text{color:var(--red); font-weight:800;}
 .gallery-note{margin-top:20px; font-size:13px; color:var(--gray); border-left:2px solid var(--red); padding-left:14px;}
 .empty-state{color:var(--gray); font-size:14px; border:1px dashed var(--line); padding:30px; text-align:center; border-radius:6px;}
 
@@ -227,6 +240,7 @@ section{padding:100px 0;}
 
 .gallery-sku-badge{background:var(--red); color:#fff;}
 .gallery-modal-product-desc{color:var(--gray); font-size:13px; margin-top:-6px;}
+.gallery-modal-click-hint{color:var(--red); font-size:12px; font-weight:700; margin-top:-6px;}
 .gallery-modal-product-card{
   display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--surface);
   border:1px solid var(--line); border-radius:6px; padding:12px 14px; cursor:pointer; transition:border-color .15s;

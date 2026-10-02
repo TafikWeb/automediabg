@@ -178,17 +178,28 @@
       <p>{{ T.gallery_subtitle }}</p>
     </div>
     {% if gallery_posts %}
-    <div class="gallery-tabs" id="galleryTabs">
-      <div class="gtab active" data-cat="all">{{ T.gallery_tab_all }}</div>
-      {% for brand in gallery_brands %}
-      <div class="gtab" data-cat="{{ brand.id }}">{{ brand.name }}</div>
-      {% endfor %}
+    <div class="products-toolbar gallery-toolbar">
+      <div class="gallery-tabs" id="galleryTabs">
+        <div class="gtab active" data-cat="all">{{ T.gallery_tab_all }}</div>
+        {% for brand in gallery_brands %}
+        <div class="gtab" data-cat="{{ brand.id }}">{{ brand.name }}</div>
+        {% endfor %}
+      </div>
+      {% if car_models %}
+      <div class="products-search compat-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="gallerySearchInput" placeholder="{{ T.compat_search_placeholder }}" oninput="filterGalleryBySearch()" autocomplete="off">
+      </div>
+      {% endif %}
     </div>
     <div class="gallery-grid">
       {% for post in gallery_posts %}
-      <div class="gallery-item" data-cat="{{ post.brand_id or '' }}" onclick="openGalleryPost({{ post.id }})">
+      <div class="gallery-item" data-cat="{{ post.brand_id or '' }}" data-post-id="{{ post.id }}" onclick="openGalleryPost({{ post.id }})">
         {% if post.images %}
           <img id="galleryThumb-{{ post.id }}" src="{{ uploaded_file_url(post.images[0].image_path) }}" alt="{{ post.tag }}" loading="lazy">
+        {% endif %}
+        {% if post.car_models %}
+        <span class="gallery-model-badge">{{ post.car_models[0].name }}</span>
         {% endif %}
         {% if post.images|length > 1 %}
         <button class="product-thumb-nav prev" onclick="event.stopPropagation(); cycleGalleryCardImage({{ post.id }}, -1)" aria-label="{{ T.prev_photo }}">&#8249;</button>
@@ -198,7 +209,13 @@
           {{ post.images|length }}
         </div>
         {% endif %}
-        {% if post.tag %}<div class="tag">{{ post.tag }}</div>{% endif %}
+        {% if post.product and post.product.sku %}
+        <div class="tag gallery-tag-structured">
+          <span class="gallery-sku-text">{{ T.art_number_label }} {{ post.product.sku }}</span>{% if post.car_models %} · {{ post.car_models[0].name }}{% endif %}
+        </div>
+        {% elif post.tag %}
+        <div class="tag">{{ post.tag }}</div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
@@ -565,12 +582,41 @@
     tab.addEventListener('click', ()=>{
       document.querySelectorAll('#galleryTabs .gtab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');
-      const cat = tab.dataset.cat;
-      document.querySelectorAll('.gallery-item').forEach(item=>{
-        item.style.display = (cat === 'all' || item.dataset.cat === cat) ? '' : 'none';
-      });
+      applyGalleryFilters();
     });
   });
+
+  function applyGalleryFilters(){
+    const activeTab = document.querySelector('#galleryTabs .gtab.active');
+    const cat = activeTab ? activeTab.dataset.cat : 'all';
+    const searchInput = document.getElementById('gallerySearchInput');
+    const raw = searchInput ? searchInput.value.trim() : '';
+
+    let matchedIds = null;
+    if(raw && typeof CAR_MODELS_DATA !== 'undefined'){
+      const query = normalizeCompatText(raw);
+      matchedIds = new Set();
+      CAR_MODELS_DATA.forEach(model => {
+        const found = model.aliases.some(alias => {
+          const na = normalizeCompatText(alias);
+          return na.includes(query) || query.includes(na);
+        });
+        if(found){
+          (model.galleryPostIds || []).forEach(id => matchedIds.add(id));
+        }
+      });
+    }
+
+    document.querySelectorAll('.gallery-item').forEach(item=>{
+      const matchesTab = (cat === 'all' || item.dataset.cat === cat);
+      const matchesSearch = matchedIds === null || matchedIds.has(parseInt(item.dataset.postId, 10));
+      item.style.display = (matchesTab && matchesSearch) ? '' : 'none';
+    });
+  }
+
+  function filterGalleryBySearch(){
+    applyGalleryFilters();
+  }
 
   function filterProductsByBrand(brand, tabEl){
     document.querySelectorAll('#productBrandTabs .gtab').forEach(t=>t.classList.remove('active'));
@@ -711,6 +757,7 @@
       <span class="modal-badge gallery-sku-badge" id="galleryModalSku" style="display:none;"></span>
       <h3 id="galleryModalTag"></h3>
       <p id="galleryModalProductDesc" class="gallery-modal-product-desc" style="display:none;"></p>
+      <p id="galleryModalClickHint" class="gallery-modal-click-hint" style="display:none;">👆 {{ T.click_listing_hint }}</p>
       <div id="galleryModalProductCard" class="gallery-modal-product-card" style="display:none;"></div>
       <div class="modal-footer" style="justify-content:flex-end;">
         <button class="btn btn-primary" onclick="galleryModalRequestQuote()">{{ T.modal_request }}</button>
@@ -731,6 +778,7 @@
     compatNoMatch: {{ T.compat_no_match | tojson }},
     compatNoProducts: {{ T.compat_no_products | tojson }},
     compatRequestBtn: {{ T.product_request | tojson }},
+    viewListingBtn: {{ T.view_listing_btn | tojson }},
     artNumberLabel: {{ T.art_number_label | tojson }},
     watchVideoExternal: {{ T.watch_video_external | tojson }},
     compatInstalledLabel: {{ T.compat_installed_label | tojson }},
@@ -1172,12 +1220,15 @@
       descEl.style.display = 'none';
     }
 
+    const hintEl = document.getElementById('galleryModalClickHint');
+    if(hintEl) hintEl.style.display = (currentGalleryPost.productId && currentGalleryPost.productName) ? 'block' : 'none';
+
     const cardEl = document.getElementById('galleryModalProductCard');
     if(currentGalleryPost.productId && currentGalleryPost.productName){
       cardEl.innerHTML =
         '<div><b>' + currentGalleryPost.productName + '</b>' +
         (currentGalleryPost.productPrice ? '<span>' + currentGalleryPost.productPrice + '</span>' : '') +
-        '</div><span class="link-arrow">' + I18N.compatRequestBtn + '</span>';
+        '</div><span class="link-arrow">' + I18N.viewListingBtn + '</span>';
       cardEl.style.display = 'flex';
       cardEl.onclick = function(){
         const pid = currentGalleryPost.productId;
