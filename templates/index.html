@@ -670,6 +670,7 @@
 
 <div class="product-modal-overlay" id="productModalOverlay" onclick="if(event.target === this) closeProductModal()">
   <div class="product-modal">
+    <button class="modal-back" id="productModalBack" onclick="returnToCompatModal()" style="display:none;" aria-label="Назад">&#8249;</button>
     <button class="modal-close" onclick="closeProductModal()">&times;</button>
     <div class="modal-media">
       <button class="modal-nav prev" onclick="modalPrev()">&#8249;</button>
@@ -695,6 +696,7 @@
 
 <div class="product-modal-overlay" id="galleryModalOverlay" onclick="if(event.target === this) closeGalleryModal()">
   <div class="product-modal">
+    <button class="modal-back" id="galleryModalBack" onclick="returnToCompatModal()" style="display:none;" aria-label="Назад">&#8249;</button>
     <button class="modal-close" onclick="closeGalleryModal()">&times;</button>
     <div class="modal-media">
       <button class="modal-nav prev" onclick="galleryModalPrev()">&#8249;</button>
@@ -703,9 +705,13 @@
       <div class="modal-counter" id="galleryModalCounter"></div>
     </div>
     <div class="modal-thumbs" id="galleryModalThumbs"></div>
+    <div id="galleryModalVideoWrap" class="gallery-modal-video-wrap" style="display:none;"></div>
     <div class="modal-info">
       <span class="modal-badge" id="galleryModalBrand"></span>
+      <span class="modal-badge gallery-sku-badge" id="galleryModalSku" style="display:none;"></span>
       <h3 id="galleryModalTag"></h3>
+      <p id="galleryModalProductDesc" class="gallery-modal-product-desc" style="display:none;"></p>
+      <div id="galleryModalProductCard" class="gallery-modal-product-card" style="display:none;"></div>
       <div class="modal-footer" style="justify-content:flex-end;">
         <button class="btn btn-primary" onclick="galleryModalRequestQuote()">{{ T.modal_request }}</button>
       </div>
@@ -725,6 +731,8 @@
     compatNoMatch: {{ T.compat_no_match | tojson }},
     compatNoProducts: {{ T.compat_no_products | tojson }},
     compatRequestBtn: {{ T.product_request | tojson }},
+    artNumberLabel: {{ T.art_number_label | tojson }},
+    watchVideoExternal: {{ T.watch_video_external | tojson }},
     compatInstalledLabel: {{ T.compat_installed_label | tojson }},
     compatViewPhotos: {{ T.compat_view_photos | tojson }},
     compatInstalledHeading: {{ T.compat_installed_heading | tojson }},
@@ -816,6 +824,28 @@
     setTimeout(()=> overlay.classList.remove('visible'), 200);
   }
 
+  function hideCompatModalInstant(){
+    const overlay = document.getElementById('compatModalOverlay');
+    overlay.classList.remove('open');
+    overlay.classList.remove('visible');
+  }
+
+  function showCompatModalPreserved(){
+    const overlay = document.getElementById('compatModalOverlay');
+    overlay.classList.add('visible');
+    requestAnimationFrame(()=> overlay.classList.add('open'));
+    document.body.style.overflow = 'hidden';
+  }
+
+  function returnToCompatModal(){
+    const productOverlay = document.getElementById('productModalOverlay');
+    const galleryOverlay = document.getElementById('galleryModalOverlay');
+    if(productOverlay.classList.contains('open')) hideProductModalDom();
+    if(galleryOverlay.classList.contains('open')) hideGalleryModalDom();
+    compatReturnPending = false;
+    setTimeout(showCompatModalPreserved, 200);
+  }
+
   function runCompatSearch(){
     const raw = document.getElementById('compatSearchInput').value.trim();
     const resultsEl = document.getElementById('compatResults');
@@ -891,7 +921,8 @@
       e.stopPropagation();
       const gid = parseInt(galleryBtn.dataset.gid, 10);
       if(GALLERY_DATA[gid]){
-        closeCompatModal();
+        compatReturnPending = true;
+        hideCompatModalInstant();
         setTimeout(()=> openGalleryPost(gid), 200);
       }
       return;
@@ -901,14 +932,16 @@
       if(row.dataset.openGalleryId !== undefined){
         const gid = parseInt(row.dataset.openGalleryId, 10);
         if(GALLERY_DATA[gid]){
-          closeCompatModal();
+          compatReturnPending = true;
+          hideCompatModalInstant();
           setTimeout(()=> openGalleryPost(gid), 200);
         }
         return;
       }
       const pid = parseInt(row.dataset.openPid, 10);
       if(PRODUCTS_DATA[pid]){
-        closeCompatModal();
+        compatReturnPending = true;
+        hideCompatModalInstant();
         setTimeout(()=> openProduct(pid), 200);
       }
     }
@@ -976,6 +1009,7 @@
     if(img) img.src = data.images[next];
   }
 
+  let compatReturnPending = false;
   let currentProduct = null;
   let currentProductId = null;
   let currentIndex = 0;
@@ -987,17 +1021,23 @@
     currentProductId = id;
     currentIndex = 0;
     renderModal();
+    document.getElementById('productModalBack').style.display = compatReturnPending ? 'flex' : 'none';
     const overlay = document.getElementById('productModalOverlay');
     overlay.classList.add('visible');
     requestAnimationFrame(()=> overlay.classList.add('open'));
     document.body.style.overflow = 'hidden';
   }
 
-  function closeProductModal(){
+  function hideProductModalDom(){
     const overlay = document.getElementById('productModalOverlay');
     overlay.classList.remove('open');
     document.body.style.overflow = '';
     setTimeout(()=>{ overlay.classList.remove('visible'); }, 220);
+  }
+
+  function closeProductModal(){
+    compatReturnPending = false;
+    hideProductModalDom();
   }
 
   function renderModal(){
@@ -1085,17 +1125,23 @@
     currentGalleryPost = data;
     galleryIndex = 0;
     renderGalleryModal();
+    document.getElementById('galleryModalBack').style.display = compatReturnPending ? 'flex' : 'none';
     const overlay = document.getElementById('galleryModalOverlay');
     overlay.classList.add('visible');
     requestAnimationFrame(()=> overlay.classList.add('open'));
     document.body.style.overflow = 'hidden';
   }
 
-  function closeGalleryModal(){
+  function hideGalleryModalDom(){
     const overlay = document.getElementById('galleryModalOverlay');
     overlay.classList.remove('open');
     document.body.style.overflow = '';
     setTimeout(()=>{ overlay.classList.remove('visible'); }, 220);
+  }
+
+  function closeGalleryModal(){
+    compatReturnPending = false;
+    hideGalleryModalDom();
   }
 
   function renderGalleryModal(){
@@ -1104,11 +1150,55 @@
     document.getElementById('galleryModalTag').textContent = currentGalleryPost.tag || '';
 
     const brandEl = document.getElementById('galleryModalBrand');
-    if(currentGalleryPost.brand){
+    const skuEl = document.getElementById('galleryModalSku');
+    if(currentGalleryPost.productSku){
+      skuEl.textContent = I18N.artNumberLabel + ' ' + currentGalleryPost.productSku;
+      skuEl.style.display = 'inline-block';
+      brandEl.style.display = 'none';
+    } else if(currentGalleryPost.brand){
       brandEl.textContent = currentGalleryPost.brand;
       brandEl.style.display = 'inline-block';
+      skuEl.style.display = 'none';
     } else {
       brandEl.style.display = 'none';
+      skuEl.style.display = 'none';
+    }
+
+    const descEl = document.getElementById('galleryModalProductDesc');
+    if(currentGalleryPost.productDescription){
+      descEl.textContent = currentGalleryPost.productDescription;
+      descEl.style.display = 'block';
+    } else {
+      descEl.style.display = 'none';
+    }
+
+    const cardEl = document.getElementById('galleryModalProductCard');
+    if(currentGalleryPost.productId && currentGalleryPost.productName){
+      cardEl.innerHTML =
+        '<div><b>' + currentGalleryPost.productName + '</b>' +
+        (currentGalleryPost.productPrice ? '<span>' + currentGalleryPost.productPrice + '</span>' : '') +
+        '</div><span class="link-arrow">' + I18N.compatRequestBtn + '</span>';
+      cardEl.style.display = 'flex';
+      cardEl.onclick = function(){
+        const pid = currentGalleryPost.productId;
+        hideGalleryModalDom();
+        setTimeout(()=> openProduct(pid), 200);
+      };
+    } else {
+      cardEl.style.display = 'none';
+      cardEl.onclick = null;
+    }
+
+    const videoWrap = document.getElementById('galleryModalVideoWrap');
+    if(currentGalleryPost.videoUrl){
+      videoWrap.innerHTML = '<video src="' + currentGalleryPost.videoUrl + '" controls muted playsinline preload="metadata"></video>';
+      videoWrap.style.display = 'block';
+    } else if(currentGalleryPost.externalVideoUrl){
+      videoWrap.innerHTML = '<a href="' + currentGalleryPost.externalVideoUrl + '" target="_blank" class="btn btn-ghost" style="width:100%; text-align:center; display:block;">▶ ' + I18N.watchVideoExternal + '</a>';
+      videoWrap.style.display = 'block';
+    } else {
+      videoWrap.innerHTML = '';
+      videoWrap.style.display = 'none';
     }
 
     const showNav = images.length > 1;
@@ -1143,9 +1233,15 @@
     renderGalleryModal();
   }
   function galleryModalRequestQuote(){
+    const linkedProductId = currentGalleryPost.productId;
+    const linkedProductName = currentGalleryPost.productName;
     closeGalleryModal();
     setTimeout(()=>{
-      document.getElementById('zayavka').scrollIntoView({behavior:'smooth'});
+      if(linkedProductId && linkedProductName){
+        selectProductForLead(linkedProductId, linkedProductName);
+      } else {
+        document.getElementById('zayavka').scrollIntoView({behavior:'smooth'});
+      }
     }, 200);
   }
 

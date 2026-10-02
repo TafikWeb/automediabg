@@ -32,6 +32,14 @@
       {% endif %}
     </div>
 
+    <label>Кой продукт е монтиран на тази снимка? (по избор — показва се арт. номер + описание при "Съвместимост")</label>
+    <select name="product_id">
+      <option value="">— без продукт —</option>
+      {% for p in all_products %}
+      <option value="{{ p.id }}" {{ 'selected' if post and post.product_id == p.id }}>{{ p.name }}{% if p.sku %} ({{ p.sku }}){% endif %}</option>
+      {% endfor %}
+    </select>
+
     <label>
       {% if post %}
         Добави още снимки ({{ post.images|length }}/{{ max_images }} качени)
@@ -44,6 +52,23 @@
     <p id="imagesPreviewHint" style="display:none; color:var(--gray); font-size:11px; margin-top:-4px;">
       Подреди преди да запазиш — първата снимка ще е корицата.
     </p>
+
+    {% if post and post.video_path %}
+    <label>Текущо видео</label>
+    <video src="{{ uploaded_file_url(post.video_path) }}" controls style="width:100%; max-width:280px; border-radius:6px; border:1px solid var(--line); margin-bottom:10px;"></video>
+    {% endif %}
+    <label>{{ 'Смени видео (по избор)' if post and post.video_path else 'Качи кратко видео от монтажа (по избор, до ~30 сек)' }}</label>
+    <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime">
+    <p style="color:var(--gray); font-size:11px; margin:-10px 0 16px;">mp4/webm/mov, до 25MB.</p>
+
+    <label>Или линк към клипче в TikTok/Instagram (ако не искаш да качваш файл директно)</label>
+    <input type="url" name="video_url" value="{{ post.video_url if post else '' }}" placeholder="https://www.tiktok.com/@.../video/...">
+    {% if post and post.video_path %}
+    <form method="POST" action="{{ url_for('admin_gallery_remove_video', post_id=post.id) }}" onsubmit="return confirm('Премахване на видеото?');" style="margin-top:-10px; margin-bottom:20px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-sm btn-danger">Премахни видеото</button>
+    </form>
+    {% endif %}
 
     <button type="submit" class="btn btn-primary">Запази</button>
     <a href="{{ url_for('admin_gallery') }}" class="btn">Отказ</a>

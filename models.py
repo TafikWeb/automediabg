@@ -92,11 +92,15 @@ class GalleryPost(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tag = db.Column(db.String(150), default="")
     brand_id = db.Column(db.Integer, db.ForeignKey("car_brand.id"), nullable=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=True)  # кой продукт е монтиран тук
+    video_path = db.Column(db.String(300), nullable=True)  # качено видео (mp4/webm/mov)
+    video_url = db.Column(db.String(500), default="")  # линк към TikTok/Instagram клип
     published = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     brand = db.relationship("CarBrand", backref="gallery_posts")
     car_models = db.relationship("CarModel", secondary=gallery_carmodel_link, backref="installed_posts")
+    product = db.relationship("Product")
 
 
 class GalleryImage(db.Model):

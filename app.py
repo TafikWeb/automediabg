@@ -35,7 +35,7 @@ ASSET_VERSION = str(int(time.time()))
 # Смени това число при всяко ново обновяване, което ти пращам — виж го в
 # долния край на менюто в админ панела, за да провериш дали Railway реално
 # е хванал последния deploy.
-SITE_VERSION = "2.5"
+SITE_VERSION = "2.6"
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-env")
 
 # DATA_DIR трябва да сочи към постоянно място (Railway Volume), иначе базата
@@ -347,6 +347,28 @@ def save_testimonial_media(file_storage):
     return None, None
 
 
+def save_video_file(file_storage, subfolder):
+    """Запазва суров видео файл (без компресия) — за кратки клипове от
+    монтажи. Връща пътя или None, ако файлът липсва/е твърде голям/невалиден."""
+    if not file_storage or file_storage.filename == "":
+        return None
+    ext = file_storage.filename.rsplit(".", 1)[-1].lower() if "." in file_storage.filename else ""
+    if ext not in ALLOWED_VIDEO_EXT:
+        return None
+    file_storage.stream.seek(0, os.SEEK_END)
+    size = file_storage.stream.tell()
+    file_storage.stream.seek(0)
+    if size > MAX_VIDEO_SIZE:
+        return None
+    filename = secure_filename(file_storage.filename)
+    stamp = int(datetime.utcnow().timestamp() * 1000)
+    folder = os.path.join(UPLOAD_DIR, subfolder)
+    os.makedirs(folder, exist_ok=True)
+    stamped = f"{stamp}_{filename}"
+    file_storage.save(os.path.join(folder, stamped))
+    return f"{subfolder}/{stamped}"
+
+
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_DIR, filename)
@@ -570,10 +592,22 @@ def render_index(lang):
 
     gallery_data = {}
     for post in gallery_posts:
+        product_desc = ""
+        if post.product and post.product.description:
+            product_desc = post.product.description.strip()
+            if len(product_desc) > 160:
+                product_desc = product_desc[:160].rsplit(" ", 1)[0] + "…"
         gallery_data[post.id] = {
             "tag": post.tag,
             "brand": post.brand.name if post.brand else "",
             "images": [url_for("uploaded_file", filename=img.image_path) for img in post.images],
+            "productId": post.product_id if (post.product and post.product.published) else None,
+            "productName": post.product.name if post.product else "",
+            "productSku": post.product.sku if post.product else "",
+            "productPrice": post.product.price if post.product else "",
+            "productDescription": product_desc,
+            "videoUrl": url_for("uploaded_file", filename=post.video_path) if post.video_path else "",
+            "externalVideoUrl": post.video_url or "",
         }
 
     services_data = {s.id: {"title": s.title} for s in services}
@@ -900,12 +934,20 @@ def admin_gallery_new():
     brands = CarBrand.query.order_by(CarBrand.name).all()
     if request.method == "POST":
         brand_id = request.form.get("brand_id") or None
+        product_id = request.form.get("product_id") or None
         post = GalleryPost(
             tag=request.form.get("tag", "").strip(),
             brand_id=int(brand_id) if brand_id else None,
+            product_id=int(product_id) if product_id else None,
+            video_url=request.form.get("video_url", "").strip(),
         )
         model_ids = [int(mid) for mid in request.form.getlist("car_model_ids") if mid.isdigit()]
         post.car_models = CarModel.query.filter(CarModel.id.in_(model_ids)).all()
+        video_path = save_video_file(request.files.get("video"), "gallery")
+        if video_path:
+            post.video_path = video_path
+        elif request.files.get("video") and request.files["video"].filename:
+            flash("Видеото не е прието — проверете формата (mp4/webm/mov) и размера (до 25MB).")
         db.session.add(post)
         db.session.commit()
 
@@ -923,6 +965,7 @@ def admin_gallery_new():
     return render_template(
         "admin/gallery_form.html", post=None, brands=brands, max_images=MAX_GALLERY_IMAGES,
         all_car_models=CarModel.query.order_by(CarModel.name).all(),
+        all_products=Product.query.order_by(Product.name).all(),
     )
 
 
@@ -933,10 +976,20 @@ def admin_gallery_edit(post_id):
     brands = CarBrand.query.order_by(CarBrand.name).all()
     if request.method == "POST":
         brand_id = request.form.get("brand_id") or None
+        product_id = request.form.get("product_id") or None
         post.tag = request.form.get("tag", "").strip()
         post.brand_id = int(brand_id) if brand_id else None
+        post.product_id = int(product_id) if product_id else None
+        post.video_url = request.form.get("video_url", "").strip()
         model_ids = [int(mid) for mid in request.form.getlist("car_model_ids") if mid.isdigit()]
         post.car_models = CarModel.query.filter(CarModel.id.in_(model_ids)).all()
+
+        if request.files.get("video") and request.files["video"].filename:
+            video_path = save_video_file(request.files.get("video"), "gallery")
+            if video_path:
+                post.video_path = video_path
+            else:
+                flash("Видеото не е прието — проверете формата (mp4/webm/mov) и размера (до 25MB).")
 
         existing_count = len(post.images)
         remaining = max(0, MAX_GALLERY_IMAGES - existing_count)
@@ -953,7 +1006,19 @@ def admin_gallery_edit(post_id):
     return render_template(
         "admin/gallery_form.html", post=post, brands=brands, max_images=MAX_GALLERY_IMAGES,
         all_car_models=CarModel.query.order_by(CarModel.name).all(),
+        all_products=Product.query.order_by(Product.name).all(),
     )
+
+
+@app.route("/admin/gallery/<int:post_id>/remove-video", methods=["POST"])
+@login_required
+def admin_gallery_remove_video(post_id):
+    post = GalleryPost.query.get_or_404(post_id)
+    post.video_path = None
+    post.video_url = ""
+    db.session.commit()
+    flash("Видеото е премахнато.")
+    return redirect(url_for("admin_gallery_edit", post_id=post_id))
 
 
 @app.route("/admin/gallery/<int:post_id>/images/<int:image_id>/delete", methods=["POST"])
@@ -1946,6 +2011,18 @@ with app.app_context():
             conn.commit()
         if "is_bestseller" not in product_cols2:
             conn.execute(db.text("ALTER TABLE product ADD COLUMN is_bestseller BOOLEAN DEFAULT 0"))
+            conn.commit()
+
+    with db.engine.connect() as conn:
+        gpost_cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(gallery_post)"))]
+        if "product_id" not in gpost_cols:
+            conn.execute(db.text("ALTER TABLE gallery_post ADD COLUMN product_id INTEGER"))
+            conn.commit()
+        if "video_path" not in gpost_cols:
+            conn.execute(db.text("ALTER TABLE gallery_post ADD COLUMN video_path VARCHAR(300)"))
+            conn.commit()
+        if "video_url" not in gpost_cols:
+            conn.execute(db.text("ALTER TABLE gallery_post ADD COLUMN video_url VARCHAR(500) DEFAULT ''"))
             conn.commit()
 
     with db.engine.connect() as conn:
