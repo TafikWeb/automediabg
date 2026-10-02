@@ -725,6 +725,10 @@
     compatNoMatch: {{ T.compat_no_match | tojson }},
     compatNoProducts: {{ T.compat_no_products | tojson }},
     compatRequestBtn: {{ T.product_request | tojson }},
+    compatInstalledLabel: {{ T.compat_installed_label | tojson }},
+    compatViewPhotos: {{ T.compat_view_photos | tojson }},
+    compatInstalledHeading: {{ T.compat_installed_heading | tojson }},
+    compatProductsHeading: {{ T.compat_products_heading | tojson }},
   };
 
   function selectProductForLead(id, name){
@@ -833,7 +837,18 @@
     }
 
     resultsEl.innerHTML = matches.map(model => {
-      const rows = model.productIds.map(pid => {
+      const galleryRows = (model.galleryPostIds || []).map(gid => {
+        const g = GALLERY_DATA[gid];
+        if(!g) return '';
+        const thumb = (g.images && g.images[0]) ? g.images[0] : '';
+        return '<div class="compat-product-row" data-open-gallery-id="' + gid + '">' +
+          (thumb ? '<img class="compat-product-thumb" src="' + thumb + '" alt="">' : '') +
+          '<div class="compat-product-info"><b>' + (g.tag || I18N.compatInstalledLabel) + '</b></div>' +
+          '<button type="button" class="compat-gallery-btn" data-gid="' + gid + '">' + I18N.compatViewPhotos + '</button>' +
+        '</div>';
+      }).join('');
+
+      const productRows = model.productIds.map(pid => {
         const p = PRODUCTS_DATA[pid];
         if(!p) return '';
         const thumb = (p.images && p.images[0]) ? p.images[0] : '';
@@ -843,17 +858,27 @@
           '<button type="button" class="compat-product-btn" data-pid="' + pid + '">' + I18N.compatRequestBtn + '</button>' +
         '</div>';
       }).join('');
-      return '<div class="compat-model-group"><div class="compat-model-name">🚗 ' + model.name + '</div>' +
-        (rows || '<p class="compat-no-match" style="padding:4px 0;">' + I18N.compatNoProducts + '</p>') +
-      '</div>';
+
+      let body = '';
+      if(galleryRows){
+        body += '<div class="compat-subheading">🔧 ' + I18N.compatInstalledHeading + '</div>' + galleryRows;
+      }
+      if(productRows){
+        body += '<div class="compat-subheading">🛒 ' + I18N.compatProductsHeading + '</div>' + productRows;
+      }
+      if(!galleryRows && !productRows){
+        body = '<p class="compat-no-match" style="padding:4px 0;">' + I18N.compatNoProducts + '</p>';
+      }
+
+      return '<div class="compat-model-group"><div class="compat-model-name">🚗 ' + model.name + '</div>' + body + '</div>';
     }).join('');
   }
 
   document.addEventListener('click', function(e){
-    const btn = e.target.closest('.compat-product-btn');
-    if(btn){
+    const productBtn = e.target.closest('.compat-product-btn');
+    if(productBtn){
       e.stopPropagation();
-      const pid = parseInt(btn.dataset.pid, 10);
+      const pid = parseInt(productBtn.dataset.pid, 10);
       const data = PRODUCTS_DATA[pid];
       if(data){
         closeCompatModal();
@@ -861,8 +886,26 @@
       }
       return;
     }
+    const galleryBtn = e.target.closest('.compat-gallery-btn');
+    if(galleryBtn){
+      e.stopPropagation();
+      const gid = parseInt(galleryBtn.dataset.gid, 10);
+      if(GALLERY_DATA[gid]){
+        closeCompatModal();
+        setTimeout(()=> openGalleryPost(gid), 200);
+      }
+      return;
+    }
     const row = e.target.closest('.compat-product-row');
     if(row){
+      if(row.dataset.openGalleryId !== undefined){
+        const gid = parseInt(row.dataset.openGalleryId, 10);
+        if(GALLERY_DATA[gid]){
+          closeCompatModal();
+          setTimeout(()=> openGalleryPost(gid), 200);
+        }
+        return;
+      }
       const pid = parseInt(row.dataset.openPid, 10);
       if(PRODUCTS_DATA[pid]){
         closeCompatModal();

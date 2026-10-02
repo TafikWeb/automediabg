@@ -184,6 +184,16 @@ section{padding:100px 0;}
 .compat-no-match{color:var(--gray); font-size:13px; padding:18px 0;}
 .compat-model-group{border:1px solid var(--line); border-radius:8px; padding:16px;}
 .compat-model-name{font-family:'Archivo Black'; font-size:14px; margin-bottom:10px; color:var(--red);}
+.compat-subheading{
+  font-size:10.5px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; color:var(--gray);
+  margin:14px 0 2px;
+}
+.compat-subheading:first-child{margin-top:0;}
+.compat-gallery-btn{
+  font-size:11px; font-weight:800; color:var(--white); text-transform:uppercase; background:none;
+  border:1px solid var(--line); border-radius:4px; padding:6px 10px; cursor:pointer; white-space:nowrap;
+}
+.compat-gallery-btn:hover{border-color:var(--red); color:var(--red);}
 .compat-product-row{
   display:flex; align-items:center; gap:12px; padding:10px 6px; border-top:1px solid var(--line);
   cursor:pointer; border-radius:4px; margin:0 -6px; transition:background .15s;

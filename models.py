@@ -81,6 +81,13 @@ class GalleryItem(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+gallery_carmodel_link = db.Table(
+    "gallery_carmodel_link",
+    db.Column("gallery_post_id", db.Integer, db.ForeignKey("gallery_post.id")),
+    db.Column("car_model_id", db.Integer, db.ForeignKey("car_model.id")),
+)
+
+
 class GalleryPost(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tag = db.Column(db.String(150), default="")
@@ -89,6 +96,7 @@ class GalleryPost(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     brand = db.relationship("CarBrand", backref="gallery_posts")
+    car_models = db.relationship("CarModel", secondary=gallery_carmodel_link, backref="installed_posts")
 
 
 class GalleryImage(db.Model):

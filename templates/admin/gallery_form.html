@@ -19,6 +19,19 @@
     </p>
     {% endif %}
 
+    <label>За кой модел е монтажът? (от бутона "Съвместимост" на сайта)</label>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+      {% for m in all_car_models %}
+      <label style="display:flex; align-items:center; gap:5px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; padding:6px 10px; font-size:12px; cursor:pointer; font-weight:400;">
+        <input type="checkbox" name="car_model_ids" value="{{ m.id }}" style="width:auto;" {{ 'checked' if post and m in post.car_models }}>
+        {{ m.name }}
+      </label>
+      {% endfor %}
+      {% if not all_car_models %}
+      <span style="color:var(--gray); font-size:12px;">Нямаш добавени модели — <a href="{{ url_for('admin_car_models') }}" style="color:var(--red);">добави модел</a> в "Модели (Съвместимост)".</span>
+      {% endif %}
+    </div>
+
     <label>
       {% if post %}
         Добави още снимки ({{ post.images|length }}/{{ max_images }} качени)

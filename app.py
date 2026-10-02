@@ -35,7 +35,7 @@ ASSET_VERSION = str(int(time.time()))
 # Смени това число при всяко ново обновяване, което ти пращам — виж го в
 # долния край на менюто в админ панела, за да провериш дали Railway реално
 # е хванал последния deploy.
-SITE_VERSION = "2.4"
+SITE_VERSION = "2.5"
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-env")
 
 # DATA_DIR трябва да сочи към постоянно място (Railway Volume), иначе базата
@@ -587,6 +587,7 @@ def render_index(lang):
             "name": m.name,
             "aliases": aliases,
             "productIds": [p.id for p in m.products if p.published],
+            "galleryPostIds": [gp.id for gp in m.installed_posts if gp.published],
         })
 
     social = {s.key: s.url for s in SocialLink.query.all()}
@@ -903,6 +904,8 @@ def admin_gallery_new():
             tag=request.form.get("tag", "").strip(),
             brand_id=int(brand_id) if brand_id else None,
         )
+        model_ids = [int(mid) for mid in request.form.getlist("car_model_ids") if mid.isdigit()]
+        post.car_models = CarModel.query.filter(CarModel.id.in_(model_ids)).all()
         db.session.add(post)
         db.session.commit()
 
@@ -917,7 +920,10 @@ def admin_gallery_new():
         else:
             flash(f"Обявата е добавена ({len(paths)} снимки качени).")
         return redirect(url_for("admin_gallery"))
-    return render_template("admin/gallery_form.html", post=None, brands=brands, max_images=MAX_GALLERY_IMAGES)
+    return render_template(
+        "admin/gallery_form.html", post=None, brands=brands, max_images=MAX_GALLERY_IMAGES,
+        all_car_models=CarModel.query.order_by(CarModel.name).all(),
+    )
 
 
 @app.route("/admin/gallery/<int:post_id>/edit", methods=["GET", "POST"])
@@ -929,6 +935,8 @@ def admin_gallery_edit(post_id):
         brand_id = request.form.get("brand_id") or None
         post.tag = request.form.get("tag", "").strip()
         post.brand_id = int(brand_id) if brand_id else None
+        model_ids = [int(mid) for mid in request.form.getlist("car_model_ids") if mid.isdigit()]
+        post.car_models = CarModel.query.filter(CarModel.id.in_(model_ids)).all()
 
         existing_count = len(post.images)
         remaining = max(0, MAX_GALLERY_IMAGES - existing_count)
@@ -942,7 +950,10 @@ def admin_gallery_edit(post_id):
         db.session.commit()
         flash("Обявата е обновена.")
         return redirect(url_for("admin_gallery"))
-    return render_template("admin/gallery_form.html", post=post, brands=brands, max_images=MAX_GALLERY_IMAGES)
+    return render_template(
+        "admin/gallery_form.html", post=post, brands=brands, max_images=MAX_GALLERY_IMAGES,
+        all_car_models=CarModel.query.order_by(CarModel.name).all(),
+    )
 
 
 @app.route("/admin/gallery/<int:post_id>/images/<int:image_id>/delete", methods=["POST"])
