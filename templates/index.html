@@ -185,36 +185,46 @@
         <div class="gtab" data-cat="{{ brand.id }}">{{ brand.name }}</div>
         {% endfor %}
       </div>
-      {% if car_models %}
-      <div class="products-search compat-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input type="text" id="gallerySearchInput" placeholder="{{ T.compat_search_placeholder }}" oninput="filterGalleryBySearch()" autocomplete="off">
+      <div class="gallery-toolbar-right">
+        {% if car_models %}
+        <select id="galleryModelSelect" class="gallery-model-select" onchange="handleGalleryModelChange()">
+          <option value="">{{ T.gallery_model_select_all }}</option>
+          {% for m in car_models %}
+          <option value="{{ m.id }}">{{ m.name }}</option>
+          {% endfor %}
+        </select>
+        <div class="products-search compat-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="gallerySearchInput" placeholder="{{ T.compat_search_placeholder }}" oninput="handleGallerySearchInput()" autocomplete="off">
+        </div>
+        {% endif %}
       </div>
-      {% endif %}
     </div>
     <div class="gallery-grid">
       {% for post in gallery_posts %}
       <div class="gallery-item" data-cat="{{ post.brand_id or '' }}" data-post-id="{{ post.id }}" onclick="openGalleryPost({{ post.id }})">
-        {% if post.images %}
-          <img id="galleryThumb-{{ post.id }}" src="{{ uploaded_file_url(post.images[0].image_path) }}" alt="{{ post.tag }}" loading="lazy">
-        {% endif %}
-        {% if post.car_models %}
-        <span class="gallery-model-badge">{{ post.car_models[0].name }}</span>
-        {% endif %}
-        {% if post.images|length > 1 %}
-        <button class="product-thumb-nav prev" onclick="event.stopPropagation(); cycleGalleryCardImage({{ post.id }}, -1)" aria-label="{{ T.prev_photo }}">&#8249;</button>
-        <button class="product-thumb-nav next" onclick="event.stopPropagation(); cycleGalleryCardImage({{ post.id }}, 1)" aria-label="{{ T.next_photo }}">&#8250;</button>
-        <div class="product-photo-count">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          {{ post.images|length }}
+        <div class="gallery-item-thumb">
+          {% if post.images %}
+            <img id="galleryThumb-{{ post.id }}" src="{{ uploaded_file_url(post.images[0].image_path) }}" alt="{{ post.tag }}" loading="lazy">
+          {% endif %}
+          {% if post.car_models %}
+          <span class="gallery-model-badge">{{ post.car_models[0].name }}</span>
+          {% endif %}
+          {% if post.images|length > 1 %}
+          <button class="product-thumb-nav prev" onclick="event.stopPropagation(); cycleGalleryCardImage({{ post.id }}, -1)" aria-label="{{ T.prev_photo }}">&#8249;</button>
+          <button class="product-thumb-nav next" onclick="event.stopPropagation(); cycleGalleryCardImage({{ post.id }}, 1)" aria-label="{{ T.next_photo }}">&#8250;</button>
+          <div class="product-photo-count">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            {{ post.images|length }}
+          </div>
+          {% endif %}
         </div>
-        {% endif %}
         {% if post.product and post.product.sku %}
-        <div class="tag gallery-tag-structured">
+        <div class="gallery-item-caption">
           <span class="gallery-sku-text">{{ T.art_number_label }} {{ post.product.sku }}</span>{% if post.car_models %} · {{ post.car_models[0].name }}{% endif %}
         </div>
         {% elif post.tag %}
-        <div class="tag">{{ post.tag }}</div>
+        <div class="gallery-item-caption">{{ post.tag }}</div>
         {% endif %}
       </div>
       {% endfor %}
@@ -283,7 +293,7 @@
           {% if p.compatible_cars %}
           <details class="product-compat-details" onclick="event.stopPropagation()">
             <summary>🚗 {{ T.compat_toggle }}</summary>
-            <p>{{ p.compatible_cars | format_compat_cars }}</p>
+            <p>{{ p.compatible_cars | format_compat_cars_block }}</p>
           </details>
           {% endif %}
           <div class="product-foot">
@@ -590,10 +600,15 @@
     const activeTab = document.querySelector('#galleryTabs .gtab.active');
     const cat = activeTab ? activeTab.dataset.cat : 'all';
     const searchInput = document.getElementById('gallerySearchInput');
+    const modelSelect = document.getElementById('galleryModelSelect');
     const raw = searchInput ? searchInput.value.trim() : '';
+    const selectedModelId = modelSelect ? modelSelect.value : '';
 
     let matchedIds = null;
-    if(raw && typeof CAR_MODELS_DATA !== 'undefined'){
+    if(selectedModelId && typeof CAR_MODELS_DATA !== 'undefined'){
+      const model = CAR_MODELS_DATA.find(m => String(m.id) === selectedModelId);
+      matchedIds = new Set(model ? (model.galleryPostIds || []) : []);
+    } else if(raw && typeof CAR_MODELS_DATA !== 'undefined'){
       const query = normalizeCompatText(raw);
       matchedIds = new Set();
       CAR_MODELS_DATA.forEach(model => {
@@ -614,7 +629,15 @@
     });
   }
 
-  function filterGalleryBySearch(){
+  function handleGalleryModelChange(){
+    const searchInput = document.getElementById('gallerySearchInput');
+    if(searchInput) searchInput.value = '';
+    applyGalleryFilters();
+  }
+
+  function handleGallerySearchInput(){
+    const modelSelect = document.getElementById('galleryModelSelect');
+    if(modelSelect) modelSelect.value = '';
     applyGalleryFilters();
   }
 
@@ -731,7 +754,7 @@
       <span class="stock-badge" id="modalStockBadge" style="margin-left:8px;"></span>
       <h3 id="modalName"></h3>
       <p id="modalDesc"></p>
-      <p id="modalCompat" style="display:none; color:var(--gray); font-size:13px; margin-top:-8px;"></p>
+      <p id="modalCompat" style="display:none; color:var(--gray); font-size:13px; margin-top:-8px; white-space:pre-line; line-height:2;"></p>
       <div class="modal-footer">
         <div class="price" id="modalPrice"></div>
         <button class="btn btn-primary" onclick="modalRequestQuote()">{{ T.modal_request }}</button>
@@ -1095,8 +1118,8 @@
     document.getElementById('modalDesc').textContent = currentProduct.description || '';
     const compatEl = document.getElementById('modalCompat');
     if(currentProduct.compatible_cars){
-      const cleanCompat = currentProduct.compatible_cars.split('\n').map(s=>s.trim().replace(/^,+|,+$/g,'').trim()).filter(Boolean).join(', ');
-      compatEl.textContent = '🚗 ' + cleanCompat;
+      const cleanCompat = currentProduct.compatible_cars.split('\n').map(s=>s.trim().replace(/^,+|,+$/g,'').trim()).filter(Boolean).join('\n');
+      compatEl.textContent = cleanCompat;
       compatEl.style.display = 'block';
     } else {
       compatEl.style.display = 'none';

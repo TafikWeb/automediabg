@@ -35,7 +35,7 @@ ASSET_VERSION = str(int(time.time()))
 # Смени това число при всяко ново обновяване, което ти пращам — виж го в
 # долния край на менюто в админ панела, за да провериш дали Railway реално
 # е хванал последния deploy.
-SITE_VERSION = "2.7"
+SITE_VERSION = "2.8"
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-env")
 
 # DATA_DIR трябва да сочи към постоянно място (Railway Volume), иначе базата
@@ -166,7 +166,8 @@ def truncate_naturally(text, limit=260):
 
 def format_compat_cars(text):
     """Превръща редовете със съвместими коли в чист списък, разделен със
-    запетая — маха празни редове и излишни интервали/запетаи от краищата."""
+    запетая — маха празни редове и излишни интервали/запетаи от краищата.
+    Използва се само за alt текст на снимки (SEO), не за визуално показване."""
     if not text:
         return ""
     lines = [line.strip(" ,\t") for line in text.split("\n")]
@@ -174,7 +175,19 @@ def format_compat_cars(text):
     return ", ".join(lines)
 
 
+def format_compat_cars_block(text):
+    """Като format_compat_cars, но пази всеки ред отделно (не ги слива в
+    едно изречение) — за визуално показване, където всяка марка/група стои
+    на собствен ред вместо да се трупат накуп в една стена от текст."""
+    if not text:
+        return ""
+    lines = [line.strip(" ,\t") for line in text.split("\n")]
+    lines = [line for line in lines if line]
+    return "\n".join(lines)
+
+
 app.jinja_env.filters["format_compat_cars"] = format_compat_cars
+app.jinja_env.filters["format_compat_cars_block"] = format_compat_cars_block
 
 INTEREST_OPTION_DEFAULTS = [
     ("multimedia", "Мултимедия"),
