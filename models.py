@@ -62,10 +62,11 @@ class CarModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)  # показвано име, напр. "VW Golf 5 (2003-2009)"
     aliases = db.Column(db.Text, default="")  # по един вариант на ред: Golf 5 / Golf V / Голф 5 / Golf5 ...
+    slug = db.Column(db.String(160), unique=True, nullable=True)  # за SEO адрес /model/<slug>
     brand_id = db.Column(db.Integer, db.ForeignKey("car_brand.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    brand = db.relationship("CarBrand")
+    brand = db.relationship("CarBrand", backref="car_models")
     products = db.relationship("Product", secondary=product_carmodel_link, backref="car_models")
 
 
@@ -93,6 +94,7 @@ class GalleryPost(db.Model):
     tag = db.Column(db.String(150), default="")
     brand_id = db.Column(db.Integer, db.ForeignKey("car_brand.id"), nullable=True)
     product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=True)  # кой продукт е монтиран тук
+    source = db.Column(db.String(20), default="own")  # own = монтаж от нас, supplier = референтна снимка от доставчик
     video_path = db.Column(db.String(300), nullable=True)  # качено видео (mp4/webm/mov)
     video_url = db.Column(db.String(500), default="")  # линк към TikTok/Instagram клип
     published = db.Column(db.Boolean, default=True)

@@ -11,7 +11,7 @@
     <select name="brand_id">
       <option value="">— без марка —</option>
       {% for brand in all_brands %}
-      <option value="{{ brand.id }}" {{ 'selected' if model and model.brand_id == brand.id }}>{{ brand.name }}</option>
+      <option value="{{ brand.id }}" {{ 'selected' if (model and model.brand_id == brand.id) or (not model and preselected_brand_id == brand.id) }}>{{ brand.name }}</option>
       {% endfor %}
     </select>
 

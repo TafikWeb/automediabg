@@ -103,20 +103,14 @@ section{padding:100px 0;}
 
 .products-toolbar{display:flex; flex-direction:column; gap:18px; margin-bottom:20px;}
 .gallery-toolbar{flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between;}
-.gallery-toolbar-right{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
-.gallery-model-select{
-  background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 14px;
-  color:var(--white); font-size:13px; font-family:'Manrope'; cursor:pointer; max-width:200px;
-}
-.gallery-model-select:focus{outline:none; border-color:var(--red);}
 .gallery-toolbar .gallery-tabs{margin-bottom:0;}
 .gallery-toolbar .products-search{max-width:280px; flex:1; min-width:200px;}
 @media (max-width:640px){
   .gallery-toolbar{flex-direction:column; align-items:stretch;}
   .gallery-toolbar .products-search{max-width:none;}
-  .gallery-toolbar-right{flex-direction:column; align-items:stretch; width:100%;}
-  .gallery-model-select{max-width:none;}
 }
+.gallery-model-tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:28px;}
+.gtab-sm{font-size:11.5px; padding:8px 14px;}
 .products-search{
   position:relative; max-width:360px;
 }
@@ -156,6 +150,14 @@ section{padding:100px 0;}
 .gallery-model-badge{
   position:absolute; top:12px; left:12px; z-index:2; background:rgba(0,0,0,0.65); color:#fff; font-size:11px;
   font-weight:700; padding:5px 10px; border-radius:3px; backdrop-filter:blur(4px);
+}
+.stock-out-note{
+  color:#e6c060; font-size:12px; font-weight:600; background:rgba(230,180,60,0.08);
+  border:1px solid rgba(230,180,60,0.25); border-radius:5px; padding:8px 11px; margin-top:4px;
+}
+.gallery-supplier-badge{
+  position:absolute; top:12px; right:12px; z-index:2; background:rgba(230,180,60,0.9); color:#221a00; font-size:10px;
+  font-weight:800; padding:5px 9px; border-radius:3px; text-transform:uppercase;
 }
 .gallery-tag-structured{display:flex; align-items:center; gap:2px; flex-wrap:wrap;}
 .gallery-sku-text{color:var(--red); font-weight:800;}
@@ -285,7 +287,8 @@ section{padding:100px 0;}
 .modal-thumb:hover{opacity:0.8;}
 .modal-thumb.active{opacity:1; border-color:var(--red);}
 .modal-info{padding:20px;}
-.modal-badge{display:none; background:var(--red); color:#fff; font-size:10.5px; font-weight:800; letter-spacing:1px; padding:5px 9px; border-radius:3px; text-transform:uppercase; margin-bottom:12px;}
+.modal-badges-row{display:flex; gap:8px; align-items:center; margin-bottom:12px;}
+.modal-badge{display:none; background:var(--red); color:#fff; font-size:10.5px; font-weight:800; letter-spacing:1px; padding:5px 9px; border-radius:3px; text-transform:uppercase;}
 .modal-info h3{font-size:20px; text-transform:none; font-family:'Manrope'; font-weight:800; margin-bottom:10px;}
 .modal-info p{color:var(--gray); font-size:14px; margin-bottom:18px; line-height:1.6; white-space:pre-line;}
 .modal-footer{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}

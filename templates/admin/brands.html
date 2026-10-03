@@ -1,8 +1,8 @@
 {% extends "admin/_base.html" %}
 {% block content %}
-<h1>Марки автомобили</h1>
+<h1>Марки и модели</h1>
 <p style="color:var(--gray); font-size:13px; margin-bottom:24px; margin-top:-14px;">
-  Тези марки се показват като филтри в секция "Монтирани от нас" на сайта.
+  Марките се показват като филтри в "Монтирани от нас". Моделите под всяка марка захранват бутона "Съвместимост" на сайта.
 </p>
 
 <div class="card" style="max-width:420px;">
@@ -14,24 +14,52 @@
   </form>
 </div>
 
-<div class="card">
-  {% if brands %}
-  <div class="table-scroll"><table>
-    <tr><th>Марка</th><th>Снимки</th><th></th></tr>
-    {% for b in brands %}
-    <tr>
-      <td>{{ b.name }}</td>
-      <td>{{ b.gallery_posts|length }}</td>
-      <td>
-        <form method="POST" action="{{ url_for('admin_brand_delete', brand_id=b.id) }}" onsubmit="return confirm('Изтриване на марката \'{{ b.name }}\'? Снимките остават, но без марка.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-sm btn-danger" type="submit">Изтрий</button>
+{% if brands %}
+  {% for b in brands %}
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h2 style="font-size:16px; margin:0;">{{ b.name }}</h2>
+      <div style="display:flex; gap:8px;">
+        <a class="btn btn-sm" href="{{ url_for('admin_car_model_new') }}?brand_id={{ b.id }}">+ Добави модел</a>
+        <form method="POST" action="{{ url_for('admin_brand_delete', brand_id=b.id) }}" onsubmit="return confirm('Изтриване на марката \'{{ b.name }}\'? Снимките остават, но без марка.');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Изтрий марката</button>
         </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </table></div>
-  {% else %}
+      </div>
+    </div>
+    {% if b.car_models %}
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+      {% for m in b.car_models|sort(attribute='name') %}
+      <a href="{{ url_for('admin_car_model_edit', model_id=m.id) }}"
+         style="display:flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; padding:6px 12px; font-size:12.5px; color:var(--white); text-decoration:none;">
+        {{ m.name }}
+        <span style="color:var(--gray); font-size:11px;">({{ m.products|length }})</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--gray); font-size:12px; margin:0;">Няма добавени модели за тази марка все още.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+<div class="card">
   <div class="empty">Все още няма добавени марки — добави първата отгоре (напр. VW, Audi, Seat).</div>
-  {% endif %}
 </div>
+{% endif %}
+
+{% if unassigned_models %}
+<div class="card">
+  <h2 style="font-size:16px; margin-bottom:14px;">Модели без марка</h2>
+  <div style="display:flex; flex-wrap:wrap; gap:8px;">
+    {% for m in unassigned_models %}
+    <a href="{{ url_for('admin_car_model_edit', model_id=m.id) }}"
+       style="display:flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; padding:6px 12px; font-size:12.5px; color:var(--white); text-decoration:none;">
+      {{ m.name }}
+      <span style="color:var(--gray); font-size:11px;">({{ m.products|length }})</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 {% endblock %}

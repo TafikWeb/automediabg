@@ -3,6 +3,18 @@
 <h1>{{ 'Редакция на обява' if post else 'Нова обява' }}</h1>
 <div class="card" style="max-width:640px;">
   <form method="POST" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Произход на снимката</label>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
+      <label style="display:flex; align-items:center; gap:8px; font-weight:400; cursor:pointer;">
+        <input type="radio" name="source" value="own" style="width:auto;" {{ 'checked' if not post or post.source == 'own' }}>
+        Монтаж, направен от нас
+      </label>
+      <label style="display:flex; align-items:center; gap:8px; font-weight:400; cursor:pointer;">
+        <input type="radio" name="source" value="supplier" style="width:auto;" {{ 'checked' if post and post.source == 'supplier' }}>
+        Референтна снимка от доставчика (имаме право да я ползваме, но не сме монтирали ние точно тази бройка)
+      </label>
+    </div>
+
     <label>Надпис (напр. "VW Golf 7 · CarPlay екран")</label>
     <input type="text" name="tag" value="{{ post.tag if post else '' }}">
 

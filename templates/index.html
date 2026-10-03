@@ -185,21 +185,16 @@
         <div class="gtab" data-cat="{{ brand.id }}">{{ brand.name }}</div>
         {% endfor %}
       </div>
-      <div class="gallery-toolbar-right">
-        {% if car_models %}
-        <select id="galleryModelSelect" class="gallery-model-select" onchange="handleGalleryModelChange()">
-          <option value="">{{ T.gallery_model_select_all }}</option>
-          {% for m in car_models %}
-          <option value="{{ m.id }}">{{ m.name }}</option>
-          {% endfor %}
-        </select>
-        <div class="products-search compat-search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" id="gallerySearchInput" placeholder="{{ T.compat_search_placeholder }}" oninput="handleGallerySearchInput()" autocomplete="off">
-        </div>
-        {% endif %}
+      {% if car_models %}
+      <div class="products-search compat-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="gallerySearchInput" placeholder="{{ T.compat_search_placeholder }}" oninput="handleGallerySearchInput()" autocomplete="off">
       </div>
+      {% endif %}
     </div>
+    {% if car_models %}
+    <div class="gallery-model-tabs" id="galleryModelTabs" style="display:none;"></div>
+    {% endif %}
     <div class="gallery-grid">
       {% for post in gallery_posts %}
       <div class="gallery-item" data-cat="{{ post.brand_id or '' }}" data-post-id="{{ post.id }}" onclick="openGalleryPost({{ post.id }})">
@@ -209,6 +204,9 @@
           {% endif %}
           {% if post.car_models %}
           <span class="gallery-model-badge">{{ post.car_models[0].name }}</span>
+          {% endif %}
+          {% if post.source == 'supplier' %}
+          <span class="gallery-supplier-badge">{{ T.supplier_photo_badge }}</span>
           {% endif %}
           {% if post.images|length > 1 %}
           <button class="product-thumb-nav prev" onclick="event.stopPropagation(); cycleGalleryCardImage({{ post.id }}, -1)" aria-label="{{ T.prev_photo }}">&#8249;</button>
@@ -296,9 +294,12 @@
             <p>{{ p.compatible_cars | format_compat_cars_block }}</p>
           </details>
           {% endif %}
+          {% if p.stock_status == 'out_of_stock' %}
+          <p class="stock-out-note">⏱ {{ T.stock_out_note }}</p>
+          {% endif %}
           <div class="product-foot">
             <div class="price">{{ p.price }}</div>
-            <button type="button" class="link-arrow request-btn" data-product-id="{{ p.id }}">{{ T.product_request }}</button>
+            <button type="button" class="link-arrow request-btn" data-product-id="{{ p.id }}">{{ T.product_request if p.stock_status == 'out_of_stock' else T.order_now_btn }}</button>
           </div>
         </div>
       </div>
@@ -592,17 +593,47 @@
     tab.addEventListener('click', ()=>{
       document.querySelectorAll('#galleryTabs .gtab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');
+      rebuildGalleryModelTabs(tab.dataset.cat);
       applyGalleryFilters();
     });
   });
 
+  function rebuildGalleryModelTabs(brandCat){
+    const wrap = document.getElementById('galleryModelTabs');
+    if(!wrap || typeof CAR_MODELS_DATA === 'undefined') return;
+    if(brandCat === 'all' || !brandCat){
+      wrap.style.display = 'none';
+      wrap.innerHTML = '';
+      return;
+    }
+    const brandId = parseInt(brandCat, 10);
+    const models = CAR_MODELS_DATA.filter(m => m.brandId === brandId && (m.galleryPostIds || []).length > 0);
+    if(!models.length){
+      wrap.style.display = 'none';
+      wrap.innerHTML = '';
+      return;
+    }
+    wrap.innerHTML = '<div class="gtab gtab-sm active" data-model="all">' + I18N.galleryModelSelectAll + '</div>' +
+      models.map(m => '<div class="gtab gtab-sm" data-model="' + m.id + '">' + m.name + '</div>').join('');
+    wrap.style.display = 'flex';
+    wrap.querySelectorAll('.gtab').forEach(tab=>{
+      tab.addEventListener('click', ()=>{
+        wrap.querySelectorAll('.gtab').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        const searchInput = document.getElementById('gallerySearchInput');
+        if(searchInput) searchInput.value = '';
+        applyGalleryFilters();
+      });
+    });
+  }
+
   function applyGalleryFilters(){
     const activeTab = document.querySelector('#galleryTabs .gtab.active');
     const cat = activeTab ? activeTab.dataset.cat : 'all';
+    const activeModelTab = document.querySelector('#galleryModelTabs .gtab.active');
+    const selectedModelId = (activeModelTab && activeModelTab.dataset.model !== 'all') ? activeModelTab.dataset.model : '';
     const searchInput = document.getElementById('gallerySearchInput');
-    const modelSelect = document.getElementById('galleryModelSelect');
     const raw = searchInput ? searchInput.value.trim() : '';
-    const selectedModelId = modelSelect ? modelSelect.value : '';
 
     let matchedIds = null;
     if(selectedModelId && typeof CAR_MODELS_DATA !== 'undefined'){
@@ -629,15 +660,13 @@
     });
   }
 
-  function handleGalleryModelChange(){
-    const searchInput = document.getElementById('gallerySearchInput');
-    if(searchInput) searchInput.value = '';
-    applyGalleryFilters();
-  }
-
   function handleGallerySearchInput(){
-    const modelSelect = document.getElementById('galleryModelSelect');
-    if(modelSelect) modelSelect.value = '';
+    const wrap = document.getElementById('galleryModelTabs');
+    if(wrap){
+      wrap.querySelectorAll('.gtab').forEach(t=>t.classList.remove('active'));
+      const allTab = wrap.querySelector('.gtab[data-model="all"]');
+      if(allTab) allTab.classList.add('active');
+    }
     applyGalleryFilters();
   }
 
@@ -750,14 +779,17 @@
     </div>
     <div class="modal-thumbs" id="modalThumbs"></div>
     <div class="modal-info">
-      <span class="modal-badge" id="modalBadge"></span>
-      <span class="stock-badge" id="modalStockBadge" style="margin-left:8px;"></span>
+      <div class="modal-badges-row">
+        <span class="modal-badge" id="modalBadge"></span>
+        <span class="stock-badge" id="modalStockBadge"></span>
+      </div>
       <h3 id="modalName"></h3>
       <p id="modalDesc"></p>
       <p id="modalCompat" style="display:none; color:var(--gray); font-size:13px; margin-top:-8px; white-space:pre-line; line-height:2;"></p>
+      <p id="modalStockNote" class="stock-out-note" style="display:none;"></p>
       <div class="modal-footer">
         <div class="price" id="modalPrice"></div>
-        <button class="btn btn-primary" onclick="modalRequestQuote()">{{ T.modal_request }}</button>
+        <button class="btn btn-primary" id="modalRequestBtn" onclick="modalRequestQuote()">{{ T.modal_request }}</button>
       </div>
     </div>
   </div>
@@ -801,6 +833,12 @@
     compatNoMatch: {{ T.compat_no_match | tojson }},
     compatNoProducts: {{ T.compat_no_products | tojson }},
     compatRequestBtn: {{ T.product_request | tojson }},
+    stockOutNote: {{ T.stock_out_note | tojson }},
+    orderNowBtn: {{ T.order_now_btn | tojson }},
+    requestBtn: {{ T.product_request | tojson }},
+    modalOrderNowLabel: {{ T.modal_order_now | tojson }},
+    modalRequestLabel: {{ T.modal_request | tojson }},
+    galleryModelSelectAll: {{ T.gallery_model_select_all | tojson }},
     viewListingBtn: {{ T.view_listing_btn | tojson }},
     artNumberLabel: {{ T.art_number_label | tojson }},
     watchVideoExternal: {{ T.watch_video_external | tojson }},
@@ -1147,6 +1185,17 @@
     const stockLabels = {in_stock: I18N.stockIn, on_order: I18N.stockOrder, out_of_stock: I18N.stockOut};
     stockEl.textContent = stockLabels[currentProduct.stockStatus] || I18N.stockIn;
     stockEl.className = 'stock-badge stock-' + (currentProduct.stockStatus || 'in_stock');
+
+    const stockNoteEl = document.getElementById('modalStockNote');
+    const requestBtnEl = document.getElementById('modalRequestBtn');
+    if(currentProduct.stockStatus === 'out_of_stock'){
+      stockNoteEl.textContent = '⏱ ' + I18N.stockOutNote;
+      stockNoteEl.style.display = 'block';
+      if(requestBtnEl) requestBtnEl.textContent = I18N.modalRequestLabel;
+    } else {
+      stockNoteEl.style.display = 'none';
+      if(requestBtnEl) requestBtnEl.textContent = I18N.modalOrderNowLabel;
+    }
 
     const showNav = images.length > 1;
     document.querySelector('#productModalOverlay .modal-nav.prev').style.display = showNav ? 'flex' : 'none';

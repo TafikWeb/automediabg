@@ -35,7 +35,7 @@ ASSET_VERSION = str(int(time.time()))
 # Смени това число при всяко ново обновяване, което ти пращам — виж го в
 # долния край на менюто в админ панела, за да провериш дали Railway реално
 # е хванал последния deploy.
-SITE_VERSION = "2.8"
+SITE_VERSION = "2.9"
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-env")
 
 # DATA_DIR трябва да сочи към постоянно място (Railway Volume), иначе базата
@@ -143,6 +143,31 @@ def format_bullets(text):
 
 
 app.jinja_env.filters["format_bullets"] = format_bullets
+
+
+def slugify_model_name(name, existing_id=None):
+    """Прави URL-safe slug от името на модел (транслитерира кирилица на
+    латиница) и гарантира уникалност, добавяйки число при нужда."""
+    cyr_to_lat = {
+        "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ж": "zh",
+        "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m", "н": "n",
+        "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u", "ф": "f",
+        "х": "h", "ц": "ts", "ч": "ch", "ш": "sh", "щ": "sht", "ъ": "a",
+        "ь": "", "ю": "yu", "я": "ya",
+    }
+    text = name.lower().strip()
+    text = "".join(cyr_to_lat.get(ch, ch) for ch in text)
+    text = re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+    text = re.sub(r"-{2,}", "-", text) or "model"
+
+    base = text
+    suffix = 2
+    while True:
+        existing = CarModel.query.filter_by(slug=text).first()
+        if not existing or existing.id == existing_id:
+            return text
+        text = f"{base}-{suffix}"
+        suffix += 1
 
 
 def truncate_naturally(text, limit=260):
@@ -636,6 +661,7 @@ def render_index(lang):
             "productDescription": product_desc,
             "videoUrl": url_for("uploaded_file", filename=post.video_path) if post.video_path else "",
             "externalVideoUrl": post.video_url or "",
+            "source": post.source or "own",
         }
 
     services_data = {s.id: {"title": s.title} for s in services}
@@ -968,6 +994,7 @@ def admin_gallery_new():
             brand_id=int(brand_id) if brand_id else None,
             product_id=int(product_id) if product_id else None,
             video_url=request.form.get("video_url", "").strip(),
+            source=request.form.get("source", "own") if request.form.get("source") in ("own", "supplier") else "own",
         )
         model_ids = [int(mid) for mid in request.form.getlist("car_model_ids") if mid.isdigit()]
         post.car_models = CarModel.query.filter(CarModel.id.in_(model_ids)).all()
@@ -1009,6 +1036,7 @@ def admin_gallery_edit(post_id):
         post.brand_id = int(brand_id) if brand_id else None
         post.product_id = int(product_id) if product_id else None
         post.video_url = request.form.get("video_url", "").strip()
+        post.source = request.form.get("source", "own") if request.form.get("source") in ("own", "supplier") else "own"
         model_ids = [int(mid) for mid in request.form.getlist("car_model_ids") if mid.isdigit()]
         post.car_models = CarModel.query.filter(CarModel.id.in_(model_ids)).all()
 
@@ -1132,7 +1160,8 @@ def admin_brands():
             flash(f'Марка "{name}" е добавена.')
         return redirect(url_for("admin_brands"))
     brands = CarBrand.query.order_by(CarBrand.name).all()
-    return render_template("admin/brands.html", brands=brands)
+    unassigned_models = CarModel.query.filter_by(brand_id=None).order_by(CarModel.name).all()
+    return render_template("admin/brands.html", brands=brands, unassigned_models=unassigned_models)
 
 
 @app.route("/admin/brands/<int:brand_id>/delete", methods=["POST"])
@@ -1576,6 +1605,7 @@ def admin_car_model_new():
         model = CarModel(
             name=name,
             aliases=request.form.get("aliases", "").strip(),
+            slug=slugify_model_name(name),
             brand_id=int(brand_id) if brand_id.isdigit() else None,
         )
         product_ids = [int(pid) for pid in request.form.getlist("product_ids") if pid.isdigit()]
@@ -1584,10 +1614,12 @@ def admin_car_model_new():
         db.session.commit()
         flash("Моделът е добавен.")
         return redirect(url_for("admin_car_models"))
+    preselected_brand_id = request.args.get("brand_id", "")
     return render_template(
         "admin/car_model_form.html", model=None,
         all_brands=CarBrand.query.order_by(CarBrand.name).all(),
         all_products=Product.query.order_by(Product.name).all(),
+        preselected_brand_id=int(preselected_brand_id) if preselected_brand_id.isdigit() else None,
     )
 
 
@@ -1600,6 +1632,8 @@ def admin_car_model_edit(model_id):
         model.aliases = request.form.get("aliases", "").strip()
         brand_id = request.form.get("brand_id", "").strip()
         model.brand_id = int(brand_id) if brand_id.isdigit() else None
+        if not model.slug:
+            model.slug = slugify_model_name(model.name, existing_id=model.id)
         product_ids = [int(pid) for pid in request.form.getlist("product_ids") if pid.isdigit()]
         model.products = Product.query.filter(Product.id.in_(product_ids)).all()
         db.session.commit()
@@ -1609,6 +1643,7 @@ def admin_car_model_edit(model_id):
         "admin/car_model_form.html", model=model,
         all_brands=CarBrand.query.order_by(CarBrand.name).all(),
         all_products=Product.query.order_by(Product.name).all(),
+        preselected_brand_id=None,
     )
 
 
@@ -2052,6 +2087,15 @@ with app.app_context():
         if "video_url" not in gpost_cols:
             conn.execute(db.text("ALTER TABLE gallery_post ADD COLUMN video_url VARCHAR(500) DEFAULT ''"))
             conn.commit()
+        if "source" not in gpost_cols:
+            conn.execute(db.text("ALTER TABLE gallery_post ADD COLUMN source VARCHAR(20) DEFAULT 'own'"))
+            conn.commit()
+
+    with db.engine.connect() as conn:
+        carmodel_cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(car_model)"))]
+        if "slug" not in carmodel_cols:
+            conn.execute(db.text("ALTER TABLE car_model ADD COLUMN slug VARCHAR(160)"))
+            conn.commit()
 
     with db.engine.connect() as conn:
         product_cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(product)"))]
@@ -2134,6 +2178,10 @@ with app.app_context():
         for i, (key, label) in enumerate(INTEREST_OPTION_DEFAULTS):
             db.session.add(InterestOption(key=key, label=label, sort_order=i))
         db.session.commit()
+
+    for model in CarModel.query.filter((CarModel.slug.is_(None)) | (CarModel.slug == "")).all():
+        model.slug = slugify_model_name(model.name, existing_id=model.id)
+    db.session.commit()
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
